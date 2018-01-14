@@ -88,5 +88,7 @@
         <projectService serviceInterface="org.objectweb.asm.idea.GroovifiedView"
                         serviceImplementation="org.objectweb.asm.idea.GroovifiedView"/>
 		<projectConfigurable instance="org.objectweb.asm.idea.config.ASMPluginConfigurable" displayName="ASM Bytecode Outline" groupId="tools" id="asmbytecodeplugin"/>
+		<fileEditorProvider implementation="com.thiakil.idea.AsmifiedBytecodeEditorProvider" order="last"/>
+		<fileEditorProvider implementation="com.thiakil.idea.TextifiedBytecodeEditorProvider" order="last"/>
 	</extensions>
 </idea-plugin>
