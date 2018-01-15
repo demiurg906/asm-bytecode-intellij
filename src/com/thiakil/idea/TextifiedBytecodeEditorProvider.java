@@ -2,6 +2,7 @@ package com.thiakil.idea;
 
 import com.intellij.ide.highlighter.JavaClassFileType;
 import com.intellij.openapi.fileEditor.FileEditor;
+import com.intellij.openapi.fileEditor.FileEditorPolicy;
 import com.intellij.openapi.fileEditor.impl.text.PsiAwareTextEditorImpl;
 import com.intellij.openapi.fileEditor.impl.text.PsiAwareTextEditorProvider;
 import com.intellij.openapi.fileEditor.impl.text.TextEditorProvider;
@@ -28,6 +29,12 @@ public class TextifiedBytecodeEditorProvider extends PsiAwareTextEditorProvider 
 	@Override
 	public FileEditor createEditor(@NotNull Project project, @NotNull VirtualFile file) {
 		return new TextEditor(project, new TextifiedVFile(file), this);
+	}
+	
+	@NotNull
+	@Override
+	public FileEditorPolicy getPolicy() {
+		return FileEditorPolicy.PLACE_AFTER_DEFAULT_EDITOR;
 	}
 
 	public static class TextEditor extends PsiAwareTextEditorImpl{
