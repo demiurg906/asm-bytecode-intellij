@@ -36,7 +36,9 @@ import reloc.org.objectweb.asm.util.TraceClassVisitor;
 
 import java.io.FileInputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -84,6 +86,9 @@ public class CustomASMifier extends Printer {
      * Pseudo access flag used to distinguish module requires/exports flags.
      */
     private static final int ACCESS_MODULE = 2097152;
+    
+    private final ArrayList<String> headerLines = new ArrayList<>();
+    private final ArrayList<String> tailLines = new ArrayList<>();
 
     /**
      * Constructs a new {@link CustomASMifier}. <i>Subclasses must not use this
@@ -171,6 +176,9 @@ public class CustomASMifier extends Printer {
     public void visit(final int version, final int access, final String name,
             final String signature, final String superName,
             final String[] interfaces) {
+        if (!headerLines.isEmpty()){
+            throw new IllegalStateException("Can't reuse this Asmifier!");
+        }
         String simpleName;
         if (name == null) {
             simpleName = "module-info";
@@ -179,15 +187,15 @@ public class CustomASMifier extends Printer {
             if (n == -1) {
                 simpleName = name;
             } else {
-                text.add("package asm." + name.substring(0, n).replace('/', '.')
+                headerLines.add("package asm." + name.substring(0, n).replace('/', '.')
                         + ";\n");
                 simpleName = name.substring(n + 1).replace('-', '_');
             }
         }
-        text.add("import java.util.*;\n");
-        text.add("import org.objectweb.asm.*;\n");
-        text.add("public class " + simpleName + "_Dump {\n\n");
-        text.add("public static byte[] dump () throws Exception {\n\n");
+        headerLines.add("import java.util.*;\n");
+        headerLines.add("import org.objectweb.asm.*;\n");
+        headerLines.add("public class " + simpleName + "_Dump {\n\n");
+        headerLines.add("\tpublic static byte[] dump () throws Exception {\n\n");
         text.add("ClassWriter cw = new ClassWriter(0);\n");
         text.add("FieldVisitor fv;\n");
         text.add("MethodVisitor mv;\n");
@@ -275,7 +283,7 @@ public class CustomASMifier extends Printer {
         text.add(buf.toString());
         CustomASMifier a = createASMifier("mdv", 0);
         text.add(a.getText());
-        text.add("}\n");
+        text.add("}\n\n");
         return a;
     }
 
@@ -329,8 +337,8 @@ public class CustomASMifier extends Printer {
     @Override
     public CustomASMifier visitField(final int access, final String name,
                                      final String desc, final String signature, final Object value) {
+        text.add("{\n");
         buf.setLength(0);
-        buf.append("{\n");
         buf.append("fv = cw.visitField(");
         appendAccess(access | ACCESS_FIELD);
         buf.append(", ");
@@ -342,18 +350,21 @@ public class CustomASMifier extends Printer {
         buf.append(", ");
         appendConstant(value);
         buf.append(");\n");
-        text.add(buf.toString());
         CustomASMifier a = createASMifier("fv", 0);
+        a.getText().add(buf.toString());
         text.add(a.getText());
-        text.add("}\n");
+        text.add("}\n\n");
         return a;
     }
 
     @Override
     public CustomASMifier visitMethod(final int access, final String name,
                                       final String desc, final String signature, final String[] exceptions) {
+        text.add("{\n");
+        CustomASMifier a = createASMifier("mv", 0);
+        List<Object> subList = a.getText();
+        text.add(subList);
         buf.setLength(0);
-        buf.append("{\n");
         buf.append("mv = cw.visitMethod(");
         appendAccess(access);
         buf.append(", ");
@@ -374,10 +385,8 @@ public class CustomASMifier extends Printer {
             buf.append("null");
         }
         buf.append(");\n");
-        text.add(buf.toString());
-        CustomASMifier a = createASMifier("mv", 0);
-        text.add(a.getText());
-        text.add("}\n");
+        subList.add(buf.toString());
+        text.add("}\n\n");
         return a;
     }
 
@@ -385,8 +394,8 @@ public class CustomASMifier extends Printer {
     public void visitClassEnd() {
         text.add("cw.visitEnd();\n\n");
         text.add("return cw.toByteArray();\n");
-        text.add("}\n");
-        text.add("}\n");
+        tailLines.add("\t}\n");
+        tailLines.add("}\n");
     }
 
     // ------------------------------------------------------------------------
@@ -522,32 +531,34 @@ public class CustomASMifier extends Printer {
 
     @Override
     public CustomASMifier visitAnnotation(final String name, final String desc) {
+        text.add("{\n");
+        CustomASMifier a = createASMifier("av", id + 1);
+        List<Object> sublist = a.getText();
+        text.add(sublist);
         buf.setLength(0);
-        buf.append("{\n");
         buf.append("AnnotationVisitor av").append(id + 1).append(" = av");
         buf.append(id).append(".visitAnnotation(");
         appendConstant(buf, name);
         buf.append(", ");
         appendConstant(buf, desc);
         buf.append(");\n");
-        text.add(buf.toString());
-        CustomASMifier a = createASMifier("av", id + 1);
-        text.add(a.getText());
+        sublist.add(buf.toString());
         text.add("}\n");
         return a;
     }
 
     @Override
     public CustomASMifier visitArray(final String name) {
+        text.add("{\n");
+        CustomASMifier a = createASMifier("av", id + 1);
+        List<Object> sublist = a.getText();
+        text.add(sublist);
         buf.setLength(0);
-        buf.append("{\n");
         buf.append("AnnotationVisitor av").append(id + 1).append(" = av");
         buf.append(id).append(".visitArray(");
         appendConstant(buf, name);
         buf.append(");\n");
-        text.add(buf.toString());
-        CustomASMifier a = createASMifier("av", id + 1);
-        text.add(a.getText());
+        sublist.add(buf.toString());
         text.add("}\n");
         return a;
     }
@@ -603,12 +614,14 @@ public class CustomASMifier extends Printer {
 
     @Override
     public CustomASMifier visitAnnotationDefault() {
-        buf.setLength(0);
-        buf.append("{\n").append("av0 = ").append(name)
-                .append(".visitAnnotationDefault();\n");
-        text.add(buf.toString());
+        text.add("{\n");
         CustomASMifier a = createASMifier("av", 0);
-        text.add(a.getText());
+        List<Object> sublist = a.getText();
+        text.add(sublist);
+        buf.setLength(0);
+        buf.append("av0 = ").append(name)
+                .append(".visitAnnotationDefault();\n");
+        sublist.add(buf.toString());
         text.add("}\n");
         return a;
     }
@@ -628,15 +641,17 @@ public class CustomASMifier extends Printer {
     @Override
     public CustomASMifier visitParameterAnnotation(final int parameter,
                                                    final String desc, final boolean visible) {
+        text.add("{\n");
+        CustomASMifier a = createASMifier("av", 0);
+        List<Object> sublist = a.getText();
+        text.add(sublist);
         buf.setLength(0);
-        buf.append("{\n").append("av0 = ").append(name)
+        buf.append("av0 = ").append(name)
                 .append(".visitParameterAnnotation(").append(parameter)
                 .append(", ");
         appendConstant(desc);
         buf.append(", ").append(visible).append(");\n");
-        text.add(buf.toString());
-        CustomASMifier a = createASMifier("av", 0);
-        text.add(a.getText());
+        sublist.add(buf.toString());
         text.add("}\n");
         return a;
     }
@@ -814,6 +829,7 @@ public class CustomASMifier extends Printer {
     public void visitJumpInsn(final int opcode, final Label label) {
         buf.setLength(0);
         declareLabel(label);
+        buf.setLength(0);
         buf.append(name).append(".visitJumpInsn(Opcodes.").append(OPCODES[opcode])
                 .append(", ");
         appendLabel(label);
@@ -825,6 +841,9 @@ public class CustomASMifier extends Printer {
     public void visitLabel(final Label label) {
         buf.setLength(0);
         declareLabel(label);
+        if (buf.length() > 0)
+            text.add(buf.toString());
+        buf.setLength(0);
         buf.append(name).append(".visitLabel(");
         appendLabel(label);
         buf.append(");\n");
@@ -958,8 +977,12 @@ public class CustomASMifier extends Printer {
     public Printer visitLocalVariableAnnotation(int typeRef, TypePath typePath,
             Label[] start, Label[] end, int[] index, String desc,
             boolean visible) {
+        text.add("{\n");
+        CustomASMifier a = createASMifier("av", 0);
+        List<Object> sublist = a.getText();
+        text.add(sublist);
         buf.setLength(0);
-        buf.append("{\n").append("av0 = ").append(name)
+        buf.append("av0 = ").append(name)
                 .append(".visitLocalVariableAnnotation(");
         buf.append(typeRef);
         if (typePath == null) {
@@ -984,9 +1007,7 @@ public class CustomASMifier extends Printer {
         buf.append(" }, ");
         appendConstant(desc);
         buf.append(", ").append(visible).append(");\n");
-        text.add(buf.toString());
-        CustomASMifier a = createASMifier("av", 0);
-        text.add(a.getText());
+        sublist.add(buf.toString());
         text.add("}\n");
         return a;
     }
@@ -1021,13 +1042,15 @@ public class CustomASMifier extends Printer {
 
     public CustomASMifier visitAnnotation(final String desc, final boolean visible) {
         buf.setLength(0);
-        buf.append("{\n").append("av0 = ").append(name)
+        text.add("{\n");
+        CustomASMifier a = createASMifier("av", 0);
+        List<Object> sublist = a.getText();
+        text.add(sublist);
+        buf.append("av0 = ").append(name)
                 .append(".visitAnnotation(");
         appendConstant(desc);
         buf.append(", ").append(visible).append(");\n");
-        text.add(buf.toString());
-        CustomASMifier a = createASMifier("av", 0);
-        text.add(a.getText());
+        sublist.add(buf.toString());
         text.add("}\n");
         return a;
     }
@@ -1040,8 +1063,13 @@ public class CustomASMifier extends Printer {
 
     public CustomASMifier visitTypeAnnotation(final String method, final int typeRef,
                                               final TypePath typePath, final String desc, final boolean visible) {
+        text.add("{\n");
+        CustomASMifier a = createASMifier("av", 0);
+        text.add(a.getText());
+        List<Object> sublist = a.getText();
+        text.add(sublist);
         buf.setLength(0);
-        buf.append("{\n").append("av0 = ").append(name).append(".")
+        buf.append("av0 = ").append(name).append(".")
                 .append(method).append("(");
         buf.append(typeRef);
         if (typePath == null) {
@@ -1052,8 +1080,6 @@ public class CustomASMifier extends Printer {
         appendConstant(desc);
         buf.append(", ").append(visible).append(");\n");
         text.add(buf.toString());
-        CustomASMifier a = createASMifier("av", 0);
-        text.add(a.getText());
         text.add("}\n");
         return a;
     }
@@ -1061,16 +1087,17 @@ public class CustomASMifier extends Printer {
     public void visitAttribute(final Attribute attr) {
         buf.setLength(0);
         buf.append("// ATTRIBUTE ").append(attr.type).append('\n');
+        text.add(buf.toString());
         if (attr instanceof ASMifiable) {
             if (labelNames == null) {
                 labelNames = new HashMap<Label, String>();
             }
-            buf.append("{\n");
+            text.add("{\n");
             ((ASMifiable) attr).asmify(buf, "attr", labelNames);
             buf.append(name).append(".visitAttribute(attr);\n");
-            buf.append("}\n");
+            text.add(buf.toString());
+            text.add("}\n");
         }
-        text.add(buf.toString());
     }
 
     // ------------------------------------------------------------------------
@@ -1436,5 +1463,47 @@ public class CustomASMifier extends Printer {
      */
     protected void appendLabel(final Label l) {
         buf.append(labelNames.get(l));
+    }
+    
+    @Override
+    public void print(PrintWriter pw) {
+        printList(pw, this.headerLines, 0);
+        printList(pw, this.text, 2);
+        printList(pw, this.tailLines, 0);
+    }
+    
+    static void printList(final PrintWriter pw, final List<?> l, int indentLevel) {
+        for (int i = 0; i < l.size(); ++i) {
+            Object o = l.get(i);
+            if (o instanceof List) {
+                printList(pw, (List<?>) o, indentLevel + 1);
+            } else {
+                String str = o.toString();
+                if (str.indexOf("\n") == str.length()-1) {
+                    if (indentLevel > 0)
+                        pw.print(getIndent("\t", indentLevel));
+                    pw.print(o.toString());
+                } else {
+                    if (str.endsWith("\n")){
+                        str = str.substring(0, str.length()-1);
+                    }
+                    String[] lines = str.split("\n");
+                    for (String line : lines){
+                        if (indentLevel > 0)
+                            pw.print(getIndent("\t", indentLevel));
+                        pw.print(line);
+                        pw.print("\n");
+                    }
+                }
+            }
+        }
+    }
+    
+    static String getIndent(String indentChar, int num){
+        StringBuilder sb = new StringBuilder(num*indentChar.length());
+        for (int i = 0; i < num; i++){
+            sb.append(indentChar);
+        }
+        return sb.toString();
     }
 }
