@@ -193,9 +193,9 @@ public class CustomASMifier extends Printer {
             }
         }
         headerLines.add("import java.util.*;\n");
-        headerLines.add("import org.objectweb.asm.*;\n");
-        headerLines.add("public class " + simpleName + "_Dump {\n\n");
-        headerLines.add("\tpublic static byte[] dump () throws Exception {\n\n");
+        headerLines.add("import org.objectweb.asm.*;\n\n");
+        headerLines.add("public class " + simpleName + "_Dump {\n");
+        headerLines.add("\tpublic static byte[] dump () throws Exception {\n");
         text.add("ClassWriter cw = new ClassWriter(0);\n");
         text.add("FieldVisitor fv;\n");
         text.add("MethodVisitor mv;\n");
@@ -353,7 +353,8 @@ public class CustomASMifier extends Printer {
         CustomASMifier a = createASMifier("fv", 0);
         a.getText().add(buf.toString());
         text.add(a.getText());
-        text.add("}\n\n");
+        text.add("}\n");
+        text.add("\n");
         return a;
     }
 
@@ -386,7 +387,8 @@ public class CustomASMifier extends Printer {
         }
         buf.append(");\n");
         subList.add(buf.toString());
-        text.add("}\n\n");
+        text.add("}\n");
+        text.add("\n");
         return a;
     }
 
@@ -1487,7 +1489,7 @@ public class CustomASMifier extends Printer {
                     if (str.endsWith("\n")){
                         str = str.substring(0, str.length()-1);
                     }
-                    String[] lines = str.split("\n");
+                    String[] lines = str.split("\n", -1);
                     for (String line : lines){
                         if (indentLevel > 0)
                             pw.print(getIndent("\t", indentLevel));
