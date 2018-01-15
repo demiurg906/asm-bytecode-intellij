@@ -7,21 +7,21 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Created by Thiakil on 14/01/2018.
  */
-public class AsmifiedBytecodeEditorProvider extends BaseBytecodeEditorProvider {
-
+public class GroovifiedBytecodeEditorProvider extends BaseBytecodeEditorProvider {
+	
 	@NotNull
 	@Override
 	public String getEditorTypeId() {
-		return "bytecode-asm-outline-asmified";
+		return "bytecode-asm-outline-groovified";
 	}
 	
 	@Override
 	protected VirtualFile getProxyVirtualFile(VirtualFile realFile, Project project) {
-		return new AsmifiedVFile(realFile);
+		return new GroovifiedVFile(realFile, project);
 	}
 	
 	@Override
 	protected String getTabName() {
-		return "Asmified";
+		return "Groovified";
 	}
 }

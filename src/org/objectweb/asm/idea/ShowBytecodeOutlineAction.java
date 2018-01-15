@@ -192,7 +192,7 @@ public class ShowBytecodeOutlineAction extends AnAction {
         }
     }
 
-    public VirtualFile findClassFile(final VirtualFile[] outputDirectories, final PsiFile psiFile) {
+    public static VirtualFile findClassFile(final VirtualFile[] outputDirectories, final PsiFile psiFile) {
         return ApplicationManager.getApplication().runReadAction(new Computable<VirtualFile>() {
             public VirtualFile compute() {
                 if (outputDirectories != null && psiFile instanceof PsiClassOwner) {
