@@ -1,6 +1,7 @@
 package com.thiakil.idea;
 
 import com.intellij.openapi.vfs.VirtualFile;
+import org.objectweb.asm.idea.CustomASMifier;
 import reloc.org.objectweb.asm.ClassReader;
 import reloc.org.objectweb.asm.util.ASMifier;
 import reloc.org.objectweb.asm.util.Textifier;
@@ -23,7 +24,7 @@ public class AsmifiedVFile extends BaseBytecodeVirtualFile {
 		byte[] contents = this.classFile.contentsToByteArray();
 		ClassReader cr = new ClassReader(contents);
 		StringWriter sw = new StringWriter();
-		cr.accept(new TraceClassVisitor(null, new ASMifier(), new PrintWriter(sw)), 0);
+		cr.accept(new TraceClassVisitor(null, new CustomASMifier(), new PrintWriter(sw)), 0);
 		return sw.toString();
 	}
 }
