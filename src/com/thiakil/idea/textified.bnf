@@ -1,0 +1,132 @@
+{
+  parserClass="com.thiakil.idea.parser.TextifiedAsmParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="TextifiedAsm"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.thiakil.idea.psi"
+  psiImplPackage="com.thiakil.idea.impl"
+
+  elementTypeHolderClass="com.thiakil.idea.psi.TextifiedAsmTypes"
+  elementTypeClass="com.thiakil.idea.psi.TextifiedAsmElementType"
+  tokenTypeClass="com.thiakil.idea.psi.TextifiedAsmTokenType"
+  tokens=[
+    comment='regexp:(//.*|/\*.*?\*/)'
+    TYPE="regexp:\[*([BCDFIJSZ]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*;)"
+    //RESULT_TYPE="regexp:([BCDFIJSZV]|L([a-zA-z\$_][a-zA-Z0-9\$_]*?/)*?[a-zA-z\$_][a-zA-Z0-9\$_]*?;)"
+    RESULT_TYPE="regexp:(L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*;)"
+    PRIMITIVE_TYPE"regexp:[BCDFIJSZ]"
+    RESULT_PRIMITIVE="regexp:[BCDFIJSZV]"
+    id='regexp:[a-zA-z\$_][a-zA-Z0-9\$_]*'
+    number='regexp:\d+(\.\d*)?'
+    string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
+    whitespace="regexp:[\n\r\t\f ]"
+    REFERENCE_TYPE="regexp:(L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*;)"
+    TYPE_NAME="regexp:(([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*)"
+  ]
+}
+
+asmFile ::= TYPE_DECLARATION+
+
+/*LETTER ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+DIGIT ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+IDENT_SYMBOLS ::= "$" | "_" | "/"
+
+id_FIRST ::= LETTER | IDENT_SYMBOLS
+id_SUBSEQUENT ::= LETTER | IDENT_SYMBOLS | DIGIT
+id_CHARS ::= id_SUBSEQUENT | id_CHARS id_SUBSEQUENT
+id ::= id_FIRST | id_FIRST id_CHARS
+*/
+
+//TYPE_DECLARATIONS ::= TYPE_DECLARATION+
+
+//TYPE ::= PRIMITIVE_TYPE | REFERENCE_TYPE | ARRAY_TYPE
+
+TYPE_DECLARATION ::= CLASS_DECLARATION | INTERFACE_DECLARATION
+
+CLASS_MODIFIERS ::= CLASS_MODIFIER+
+
+CLASS_MODIFIER ::= public | abstract | final
+
+SUPER ::= extends CLASS_TYPE
+
+INTERFACES ::= implements INTERFACE_TYPE_LIST
+
+INTERFACE_TYPE_LIST ::= (INTERFACE_TYPE ",")* INTERFACE_TYPE
+
+CLASS_BODY ::= CLASS_BODY_DECLARATION*
+
+//CLASS_BODY_DECLARATIONS ::= CLASS_BODY_DECLARATION | CLASS_BODY_DECLARATIONS CLASS_BODY_DECLARATION
+
+FIELD_DECLARATION ::= FIELD_MODIFIER* TYPE id ANNOTATION_ELEMENT*
+
+//FIELD_MODIFIERS ::= +
+
+FIELD_MODIFIER ::= public | protected | private | static | final | transient | volatile | synthetic
+
+METHOD_DECLARATION ::= METHOD_HEADER METHOD_BODY?
+
+METHOD_HEADER ::= METHOD_MODIFIER* METHOD_DECLARATOR THROWS?
+
+//RESULT_TYPE ::= REFERENCE_TYPE | ARRAY_TYPE | RESULT_PRIMITIVE
+
+//METHOD_MODIFIERS ::= (METHOD_MODIFIER)* METHOD_MODIFIER
+
+METHOD_MODIFIER ::= public | protected | private | static | abstract | final | synchronized | native | synthetic | bridge | default
+
+METHOD_DECLARATOR ::= id "(" FORMAL_PARAMETER* ")" RESULT_TYPE ANNOTATION_ELEMENT*
+
+METHOD_BODY ::= METHOD_BODY_ELEMENT*
+
+FORMAL_PARAMETER_LIST ::= FORMAL_PARAMETER+
+
+FORMAL_PARAMETER ::= TYPE
+
+THROWS ::= "throws" CLASS_TYPE_LIST
+
+CLASS_BODY_DECLARATION ::= FIELD_DECLARATION | METHOD_DECLARATION
+
+CLASS_TYPE_LIST ::= (CLASS_TYPE ",")* CLASS_TYPE
+
+INTERFACE_DECLARATION ::= INTERFACE_MODIFIER* interface INTERFACE_TYPE EXTENDS_INTERFACES? "{" INTERFACE_BODY// "}"
+
+//INTERFACE_MODIFIERS ::= INTERFACE_MODIFIER+
+
+INTERFACE_MODIFIER ::= public | abstract
+
+EXTENDS_INTERFACES ::= implements (INTERFACE_TYPE ",")* INTERFACE_TYPE
+
+INTERFACE_BODY ::= INTERFACE_MEMBER_DECLARATION*
+
+//INTERFACE_MEMBER_DECLARATIONS ::= INTERFACE_MEMBER_DECLARATION*
+
+private INTERFACE_MEMBER_DECLARATION ::= CONSTANT_DECLARATION | METHOD_DECLARATION | ANNOTATION_ELEMENT
+
+CONSTANT_DECLARATION ::= CONSTANT_MODIFIER* TYPE id
+
+CONSTANT_MODIFIER ::= public | static | final
+
+//ABSTRACT_METHOD_DECLARATION::= ABSTRACT_METHOD_MODIFIERS? RESULT_TYPE METHOD_DECLARATOR THROWS? ;
+
+//PRIMITIVE_TYPE ::= (B|C|D|F|I|J|S|Z)
+
+//REFERENCE_TYPE ::= (L{CLASS_TYPE}";")
+
+ARRAY_TYPE ::= ("["+PRIMITIVE_TYPE) | ("["+REFERENCE_TYPE)
+
+CLASS_TYPE ::= TYPE_NAME
+
+INTERFACE_TYPE ::= TYPE_NAME
+
+//TYPE_NAME ::= (id"/")*id
+
+PACKAGE_NAME ::= PACKAGE_PART+
+
+PACKAGE_PART ::= id "/"
+
+ANNOTATION_ELEMENT ::= "@" REFERENCE_TYPE "(" ")"
+
+CLASS_DECLARATION ::= CLASS_MODIFIERS? "class " CLASS_TYPE SUPER? INTERFACES? "{" CLASS_BODY "}"
+
+METHOD_BODY_ELEMENT ::= LABEL_DECLARATION | INSTRUCTION

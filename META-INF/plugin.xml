@@ -91,5 +91,6 @@
 		<fileEditorProvider implementation="com.thiakil.idea.TextifiedBytecodeEditorProvider" order="last"/>
 		<fileEditorProvider implementation="com.thiakil.idea.AsmifiedBytecodeEditorProvider" order="last"/>
 		<!--<fileEditorProvider implementation="com.thiakil.idea.GroovifiedBytecodeEditorProvider" order="last"/>-->
+		<fileTypeFactory implementation="com.thiakil.idea.TextifiedAsmFileType$Factory"/>
 	</extensions>
 </idea-plugin>
