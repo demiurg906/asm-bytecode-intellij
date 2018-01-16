@@ -14,7 +14,7 @@ import java.io.StringWriter;
  */
 public class TextifiedVFile extends BaseBytecodeVirtualFile {
 	public TextifiedVFile(VirtualFile classFileIn){
-		super(classFileIn, "textified.java");
+		super(classFileIn, "textified.ow-asm");
 	}
 
 	@Override//TODO cache

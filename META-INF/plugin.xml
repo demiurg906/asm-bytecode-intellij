@@ -92,5 +92,6 @@
 		<fileEditorProvider implementation="com.thiakil.idea.AsmifiedBytecodeEditorProvider" order="last"/>
 		<!--<fileEditorProvider implementation="com.thiakil.idea.GroovifiedBytecodeEditorProvider" order="last"/>-->
 		<fileTypeFactory implementation="com.thiakil.idea.TextifiedAsmFileType$Factory"/>
+		<lang.parserDefinition implementationClass="com.thiakil.idea.TextifiedParserDefinition" language="JAVA-ASM-Textified"/>
 	</extensions>
 </idea-plugin>

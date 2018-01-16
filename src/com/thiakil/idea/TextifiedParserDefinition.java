@@ -8,58 +8,67 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
+import com.thiakil.idea.parser.TextifiedAsmParser;
+import com.thiakil.idea.psi.TextifiedAsmFile;
+import com.thiakil.idea.psi.TextifiedAsmTypes;
 import org.jetbrains.annotations.NotNull;
 
 public class TextifiedParserDefinition implements ParserDefinition {
+	public static final IFileElementType FILE = new IFileElementType(TextifiedBytecodeLanguage.INSTANCE);
+	public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE);
+	public static final TokenSet COMMENTS = TokenSet.create(TextifiedAsmTypes.COMMENT);
+	public static final TokenSet STRINGS = TokenSet.create(TextifiedAsmTypes.STRING);
+
 	@NotNull
 	@Override
 	public Lexer createLexer(Project project) {
-		return new ASMTextifiedLexerAdapter();
+		return new TextifiedAsmLexer();
 	}
 	
 	@Override
 	public PsiParser createParser(Project project) {
-		return null;
+		return new TextifiedAsmParser();
 	}
 	
 	@Override
 	public IFileElementType getFileNodeType() {
-		return null;
+		return FILE;
 	}
 	
 	@NotNull
 	@Override
 	public TokenSet getWhitespaceTokens() {
-		return null;
+		return WHITE_SPACES;
 	}
 	
 	@NotNull
 	@Override
 	public TokenSet getCommentTokens() {
-		return null;
+		return COMMENTS;
 	}
 	
 	@NotNull
 	@Override
 	public TokenSet getStringLiteralElements() {
-		return null;
+		return STRINGS;
 	}
 	
 	@NotNull
 	@Override
 	public PsiElement createElement(ASTNode node) {
-		return null;
+		return TextifiedAsmTypes.Factory.createElement(node);
 	}
 	
 	@Override
 	public PsiFile createFile(FileViewProvider viewProvider) {
-		return null;
+		return new TextifiedAsmFile(viewProvider);
 	}
 	
 	@Override
 	public SpaceRequirements spaceExistanceTypeBetweenTokens(ASTNode left, ASTNode right) {
-		return null;
+		return SpaceRequirements.MAY;
 	}
 }
