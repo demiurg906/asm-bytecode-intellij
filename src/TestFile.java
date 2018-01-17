@@ -25,6 +25,8 @@ public class TestFile {
 		Object[] objArray = new Object[]{ "hai", 12.3, 4.4F, null, (Runnable)()->{ int i = 0; } };
 		return new int[]{1,2,3,4};
 	}
+	
+	public void dualParam(int i, int j){}
 
 	private static class staticClass{
 		int innerInt;

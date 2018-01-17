@@ -1,5 +1,6 @@
 {
   parserClass="com.thiakil.idea.parser.TextifiedAsmParser"
+  parserUtilClass="com.thiakil.idea.parser.TextifiedAsmParserUtil"
 
   extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
 
@@ -11,47 +12,59 @@
   elementTypeHolderClass="com.thiakil.idea.psi.TextifiedAsmTypes"
   elementTypeClass="com.thiakil.idea.psi.TextifiedAsmElementType"
   tokenTypeClass="com.thiakil.idea.psi.TextifiedAsmTokenType"
+  psiImplUtilClass="com.thiakil.idea.parser.TextifiedAsmParserUtil"
+  //recoverWhile="LINEFEED"
   tokens=[
-    comment='regexp:(//.*|/\*.*?\*/)'
+    comment='regexp:(//.*|/\*(.|\n|\r)*?\*/)'
+    //REFERENCE_ARRAY='regexp:([\[]+L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)'
+    //PRIMITIVE_ARRAY='regexp:([\[]+)'
     //TYPE='regexp:(\[*([BCDFIJSZ]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*;))'
     //RESULT_TYPE='regexp:(\[*([BCDFIJSZV]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*;))'
-    PRIMITIVE_TYPE='regexp:([BCDFIJSZ])'
-    RESULT_PRIMITIVE='regexp:([BCDFIJSZV])'
+    //ARRAY_BRACE='regexp:(\[+)'
+    //PRIMITIVE_TYPE='regexp:([BCDFIJSZ])'
+    //RESULT_PRIMITIVE='regexp:([BCDFIJSZV])'
+    REFERENCE_TYPE='regexp:(L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)'
+    DESC='regexp:\[*([BCDFIJSZ])'
+    //DESC2='regexp:\[*([BCDFIJSZ]|(L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;))'
+    //METHOD_DESC='regexp:\(\[*([BCDFIJSZ]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)*\)\[*([BCDFIJSZV]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)'
+    METHOD_DESC='regexp:\(({DESC}|{REFERENCE_TYPE})*\)({DESC}|{REFERENCE_TYPE}|V)'
     LABEL_ID='regexp:(L\d+)'
-    REFERENCE_TYPE='regexp:(L(?:[a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)'
     TYPE_NAME='regexp:(([a-zA-z\$_][a-zA-Z0-9\$_]*/)+[a-zA-z\$_][a-zA-Z0-9\$_]*)'
     identifier='regexp:([a-zA-z\$_][a-zA-Z0-9\$_]*)'
     number='regexp:(\d+(\.\d*)?)'
     string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
     whitespace='regexp:([\n\r\t\f ])'
   ]
+  //implements("TYPE")="com.thiakil.idea.psi.PsiDescElement"
 }
 
-asmFile ::= TYPE_DECLARATION+
+asmFile ::= TYPE_DECLARATION*
 
-CLASS_DECLARATION ::= CLASS_MODIFIERS? class CLASS_TYPE SUPER? INTERFACES?
+CLASS_DECLARATION ::= CLASS_MODIFIERS? class CLASS_TYPE SUPER? INTERFACES? {pin=2}
 
-CLASS_DEFINITION ::= CLASS_DECLARATION "{" CLASS_BODY //"}"
+CLASS_DEFINITION ::= CLASS_DECLARATION "{" CLASS_BODY "}"
 
-INNER_CLASS_DECLARATION ::= FIELD_MODIFIER* INNERCLASS CLASS_TYPE CLASS_TYPE CLASS_TYPE
+INNER_CLASS_DECLARATION ::= INNER_CLASS_MODIFIERS* INNERCLASS CLASS_TYPE CLASS_TYPE CLASS_TYPE {pin=2}
+
+INNER_CLASS_MODIFIERS ::= CLASS_MODIFIER |  FIELD_MODIFIER
 
 private TYPE_DECLARATION ::= CLASS_DEFINITION | INTERFACE_DECLARATION
 
 private CLASS_MODIFIERS ::= CLASS_MODIFIER*
 
-CLASS_MODIFIER ::= public | abstract | final
+CLASS_MODIFIER ::= public | abstract | final | enum
 
-SUPER ::= extends CLASS_TYPE
+SUPER ::= extends CLASS_TYPE {pin=1}
 
-INTERFACES ::= implements INTERFACE_TYPE_LIST
+INTERFACES ::= implements INTERFACE_TYPE_LIST {pin=1}
 
-INTERFACE_TYPE_LIST ::= (INTERFACE_TYPE ",")* INTERFACE_TYPE
+INTERFACE_TYPE_LIST ::= INTERFACE_TYPE+
 
 CLASS_BODY ::= CLASS_BODY_DECLARATION*
 
-FIELD_DECLARATION ::= FIELD_MODIFIER* TYPE identifier FIELD_INITIALISER? ANNOTATION_ELEMENT*
+FIELD_DECLARATION ::= FIELD_MODIFIER* TYPE identifier FIELD_INITIALISER? ANNOTATION_ELEMENT* {pin=2}
 
-FIELD_INITIALISER ::= "=" FIELD_INITIALISER_VALUE
+FIELD_INITIALISER ::= "=" FIELD_INITIALISER_VALUE {pin=1}
 
 FIELD_INITIALISER_VALUE ::= string | number
 
@@ -59,73 +72,69 @@ FIELD_MODIFIER ::= public | protected | private | static | final | transient | v
 
 METHOD_DECLARATION ::= METHOD_HEADER METHOD_BODY?
 
-private METHOD_HEADER ::= METHOD_MODIFIER* METHOD_DECLARATOR THROWS?
+private METHOD_HEADER ::= METHOD_MODIFIER* METHOD_DECLARATOR THROWS? ANNOTATION_ELEMENT* {pin=2}
 
 METHOD_MODIFIER ::= public | protected | private | static | abstract | final | synchronized | native | synthetic | bridge | default
 
-private METHOD_DECLARATOR ::= METHOD_IDENTIFIER METHOD_DESC ANNOTATION_ELEMENT*
+private METHOD_DECLARATOR ::= METHOD_IDENTIFIER METHOD_DESC
 
-METHOD_DESC ::= METHOD_PARAM RESULT_TYPE
+//METHOD_DESC ::= METHOD_PARAM RESULT_TYPE
 
-private METHOD_PARAM ::= '(' FORMAL_PARAMETER* ')'
+private METHOD_PARAM ::= '(' FORMAL_PARAMETER* ')' //{recoverWhile="PARAM_RECOVER" pin=1}
 
-METHOD_IDENTIFIER ::= identifier | <init> | <clinit>
+private PARAM_RECOVER ::= !(FORMAL_PARAMETER | ')')
 
-METHOD_BODY ::= METHOD_BODY_ELEMENT* MAX_ELS*
+METHOD_IDENTIFIER ::= identifier | "<init>" | "<clinit>"
+
+METHOD_BODY ::= METHOD_BODY_ELEMENT+ LOCAL_VARIABLES? MAX_ELS*
 
 private MAX_ELS ::= MAX_STACK | MAX_LOCALS
 
-MAX_STACK ::= MAXSTACK "=" number
+LOCAL_VARIABLES ::= LOCAL_VARIABLE+
 
-MAX_LOCALS ::= MAXLOCALS "=" number
+LABEL_REF ::= LABEL_ID
 
-FORMAL_PARAMETER ::= TYPE
+LOCAL_VARIABLE ::= LOCALVARIABLE identifier TYPE LABEL_REF LABEL_REF number {methods=[VariableName="identifier" startLabel="LABEL_REF[0]" endLabel="LABEL_REF[1]" index="number"] pin=1}
+
+MAX_STACK ::= MAXSTACK "=" number {pin=1}
+
+MAX_LOCALS ::= MAXLOCALS "=" number{pin=1}
+
+FORMAL_PARAMETER ::= TYPE | identifier
 
 THROWS ::= "throws" CLASS_TYPE_LIST
 
 private CLASS_BODY_DECLARATION ::= INNER_CLASS_DECLARATION | FIELD_DECLARATION | METHOD_DECLARATION
 
-CLASS_TYPE_LIST ::= (CLASS_TYPE ",")* CLASS_TYPE
+CLASS_TYPE_LIST ::= CLASS_TYPE+
 
-INTERFACE_DECLARATION ::= INTERFACE_MODIFIERS interface INTERFACE_TYPE EXTENDS_INTERFACES? "{" INTERFACE_BODY// "}"
+INTERFACE_DECLARATION ::= INTERFACE_MODIFIERS interface INTERFACE_TYPE EXTENDS_INTERFACES? "{" INTERFACE_BODY "}"
 
 INTERFACE_MODIFIERS ::= INTERFACE_MODIFIER*
 
 private INTERFACE_MODIFIER ::= public | abstract
 
-EXTENDS_INTERFACES ::= implements (INTERFACE_TYPE ",")* INTERFACE_TYPE
+EXTENDS_INTERFACES ::= implements INTERFACE_TYPE+
 
 INTERFACE_BODY ::= INTERFACE_MEMBER_DECLARATION*
 
 private INTERFACE_MEMBER_DECLARATION ::= CONSTANT_DECLARATION | METHOD_DECLARATION | ANNOTATION_ELEMENT
 
-CONSTANT_DECLARATION ::= CONSTANT_MODIFIER* REFERENCE_TYPE identifier
+CONSTANT_DECLARATION ::= CONSTANT_MODIFIER* TYPE identifier
 
 CONSTANT_MODIFIER ::= public | static | final
 
-//PRIMITIVE_TYPE ::= (B|C|D|F|I|J|S|Z)
-
-//REFERENCE_TYPE ::= (L{CLASS_TYPE}";")
-
-ARRAY_TYPE ::= ("["+PRIMITIVE_TYPE) | ("["+REFERENCE_TYPE)
-
-TYPE ::= ARRAY_TYPE| REFERENCE_TYPE | PRIMITIVE_TYPE
-
-RESULT_TYPE ::= TYPE | 'V'
+TYPE ::= DESC | REFERENCE_TYPE {methods=[getDescElements]}//ARRAY_TYPE | REFERENCE_TYPE | PRIMITIVE_TYPE
 
 CLASS_TYPE ::= TYPE_NAME | identifier
 
-INTERFACE_TYPE ::= TYPE_NAME
+INTERFACE_TYPE ::= TYPE_NAME | identifier
 
-//TYPE_NAME ::= (id"/")*id
+ANNOTATION_ELEMENT ::= "@" REFERENCE_TYPE "(" ")" {pin=1}
 
-//PACKAGE_NAME ::= PACKAGE_PART+
+private METHOD_BODY_ELEMENT ::= LABEL_DECLARATION | INSTRUCTION_KIND {recoverWhile="METHOD_RECOVERY"}
 
-//PACKAGE_PART ::= id "/"
-
-ANNOTATION_ELEMENT ::= "@" REFERENCE_TYPE "(" ")"
-
-private METHOD_BODY_ELEMENT ::= LABEL_DECLARATION | INSTRUCTION_KIND
+private METHOD_RECOVERY ::= !("}" | LABEL_DECLARATION | INSTRUCTION_KIND | LOCAL_VARIABLE | MAX_LOCALS | MAX_STACK)
 
 LABEL_DECLARATION ::= LABEL_ID
 
@@ -133,20 +142,22 @@ private INSTRUCTION_KIND ::= INSTRUCTION | INSTRUCTION_WITH_ARGS
 
 INSTRUCTION ::= NOP | ACONST_NULL | ICONST_M1 | ICONST_0 | ICONST_1 | ICONST_2 | ICONST_3 | ICONST_4 | ICONST_5 | LCONST_0 | LCONST_1 | FCONST_0 | FCONST_1 | FCONST_2 | DCONST_0 | DCONST_1 | IALOAD | LALOAD | FALOAD | DALOAD | AALOAD | BALOAD | CALOAD | SALOAD | IASTORE | LASTORE | FASTORE | DASTORE | AASTORE | BASTORE | CASTORE | SASTORE | POP | POP2 | DUP | DUP_X1 | DUP_X2 | DUP2 | DUP2_X1 | DUP2_X2 | SWAP | IADD | LADD | FADD | DADD | ISUB | LSUB | FSUB | DSUB | IMUL | LMUL | FMUL | DMUL | IDIV | LDIV | FDIV | DDIV | IREM | LREM | FREM | DREM | INEG | LNEG | FNEG | DNEG | ISHL | LSHL | ISHR | LSHR | IUSHR | LUSHR | IAND | LAND | IOR | LOR | IXOR | LXOR | I2L | I2F | I2D | L2I | L2F | L2D | F2I | F2L | F2D | D2I | D2L | D2F | I2B | I2C | I2S | LCMP | FCMPL | FCMPG | DCMPL | DCMPG | IRETURN | LRETURN | FRETURN | DRETURN | ARETURN | RETURN | ARRAYLENGTH | ATHROW | MONITORENTER | MONITOREXIT
 
-private INSTRUCTION_WITH_ARGS ::= LINE_NUMBER | NEW_INSN | LDC_INSN | ALOAD_INSN | INVOKE_SPECIAL | BI_PUSH | PUT_FIELD
+private INSTRUCTION_WITH_ARGS ::= LINE_NUMBER | NEW_INSN | LDC_INSN | ALOAD_INSN | INVOKE_SPECIAL | BI_PUSH | PUT_FIELD | INVOKE_STATIC
 
-LINE_NUMBER ::= LINENUMBER number LABEL_ID
+LINE_NUMBER ::= LINENUMBER number LABEL_ID {pin=1}
 
-NEW_INSN ::= NEW TYPE_NAME
+NEW_INSN ::= NEW TYPE_NAME {pin=1}
 
-LDC_INSN ::= LDC LDC_ARG
+LDC_INSN ::= LDC LDC_ARG {pin="LDC"}
 
 private LDC_ARG ::= string | number
 
-ALOAD_INSN ::= ALOAD number
+ALOAD_INSN ::= ALOAD number {pin="ALOAD"}
 
-INVOKE_SPECIAL ::= INVOKESPECIAL CLASS_TYPE "." METHOD_IDENTIFIER METHOD_DESC
+INVOKE_SPECIAL ::= INVOKESPECIAL CLASS_TYPE "." METHOD_IDENTIFIER METHOD_DESC {methods=[owner="CLASS_TYPE" methodName="METHOD_IDENTIFIER" desc="METHOD_DESC"] pin="INVOKESPECIAL"}
 
-BI_PUSH ::= BIPUSH number
+INVOKE_STATIC ::= INVOKESTATIC CLASS_TYPE "." METHOD_IDENTIFIER METHOD_DESC {methods=[owner="CLASS_TYPE" methodName="METHOD_IDENTIFIER" desc="METHOD_DESC"] pin="INVOKESTATIC"}
 
-PUT_FIELD ::= PUTFIELD CLASS_TYPE "." identifier ":" TYPE {name("PUT_FIELD")="what"}
+BI_PUSH ::= BIPUSH number {pin=1}
+
+PUT_FIELD ::= PUTFIELD CLASS_TYPE "." identifier ":" TYPE {methods=[owner="CLASS_TYPE" fieldName="identifier" desc="TYPE"] pin=1}
