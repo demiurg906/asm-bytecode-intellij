@@ -1,3 +1,5 @@
+import java.util.function.BiFunction;
+
 /**
  * Created by Thiakil on 16/01/2018.
  */
@@ -22,11 +24,17 @@ public class TestFile {
 	private static Class<?> clazz = Object.class;
 
 	public int[] doArray(){
-		Object[] objArray = new Object[]{ "hai", 12.3, 4.4F, null, (Runnable)()->{ int i = 0; } };
+		Object[] objArray = new Object[]{ "hai", 12.3, 4.4F, null, (Runnable)()->{ int i = 0; }, (BiFunction<String,String,Integer>)(a,b)->12 };
 		return new int[]{1,2,3,4};
 	}
 	
-	public void dualParam(int i, int j){}
+	public void dualParam(int i, int j){
+		try {
+			int pop = 0;
+		} catch (Exception e){
+			System.out.println("OH NOES");
+		}
+	}
 
 	private static class staticClass{
 		int innerInt;
