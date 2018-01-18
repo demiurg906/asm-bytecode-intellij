@@ -8,8 +8,8 @@ public class TextifiedAsmElementType extends IElementType {
 		super(debugName, TextifiedBytecodeLanguage.INSTANCE);
 	}
 	
-	@Override
+	/*@Override
 	public String toString() {
-		return "TextifiedAsmElementType"+super.toString();
-	}
+		return "TextifiedAsmElementType."+super.toString();
+	}*/
 }

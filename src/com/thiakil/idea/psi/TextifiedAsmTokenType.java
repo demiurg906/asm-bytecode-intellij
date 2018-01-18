@@ -10,6 +10,6 @@ public class TextifiedAsmTokenType extends IElementType {
 	
 	@Override
 	public String toString() {
-		return "TextifiedAsmTokenType"+super.toString();
+		return super.toString();
 	}
 }
