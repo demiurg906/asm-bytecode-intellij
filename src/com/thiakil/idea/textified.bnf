@@ -35,6 +35,8 @@
     number='regexp:(-?\d+(\.\d*)?)'
     string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
     WHITE_SPACE='regexp:\s+'
+    GROUP_OPENER='['
+    GROUP_CLOSER=']'
   ]
   //implements("TYPE")="com.thiakil.idea.psi.PsiDescElement"
 }
@@ -226,7 +228,7 @@ CHOP_AMOUNT ::= number
 
 FRAME_FULL_NEW ::= (FULL | NEW) FRAME_TYPES_LIST FRAME_TYPES_LIST {pin=1}
 
-FRAME_TYPES_LIST ::= "[" FRAME_TYPE* "]" {recoverWhile=FRAME_TYPES_LIST_RECOVER pin=1}
+FRAME_TYPES_LIST ::= GROUP_OPENER FRAME_TYPE* GROUP_CLOSER {recoverWhile=FRAME_TYPES_LIST_RECOVER pin=1}
 
 private FRAME_TYPES_LIST_RECOVER ::= !( "]" | METHOD_BODY_ELEMENT | LOCAL_VARIABLE | MAX_LOCALS | MAX_STACK)
 
