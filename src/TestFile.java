@@ -24,13 +24,41 @@ public class TestFile {
 	private static Class<?> clazz = Object.class;
 
 	public int[] doArray(){
+		
 		Object[] objArray = new Object[]{ "hai", 12.3, 4.4F, null, (Runnable)()->{ int i = 0; }, (BiFunction<String,String,Integer>)(a,b)->12 };
 		return new int[]{1,2,3,4};
 	}
 	
 	public void dualParam(int i, int j){
+		switch (j){
+			case 1:
+				System.out.print("is one");
+				break;
+			case 2:
+			case 3:
+				System.out.print("I haz fallthrough");
+			default:
+				System.out.print("awwww :(");
+		}
 		try {
-			int pop = 0;
+			if (i == 1) {
+				int pop = 0;
+			} else if (i< 10){
+				j++;
+			} else if (i>200){
+				j--;
+			} else if (i<=12){
+				j += 10;
+			} else if (i >= 14){
+				j -= 10;
+				if (j<2) {
+					Object blah = null;
+					char c = 'A';
+					System.out.print(c);
+				}
+			} else if (j != 15){
+				System.out.print(j);
+			}
 		} catch (Exception e){
 			System.out.println("OH NOES");
 		}

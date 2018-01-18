@@ -16,30 +16,34 @@
   //recoverWhile="LINEFEED"
   tokens=[
     comment='regexp:(//.*|/\*(.|\n|\r)*?\*/)'
-    //REFERENCE_ARRAY='regexp:([\[]+L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)'
+    //REFERENCE_ARRAY='regexp:([\[]+L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;)'
     //PRIMITIVE_ARRAY='regexp:([\[]+)'
-    //TYPE='regexp:(\[*([BCDFIJSZ]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*;))'
-    //RESULT_TYPE='regexp:(\[*([BCDFIJSZV]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*;))'
+    //TYPE='regexp:(\[*([BCDFIJSZ]|L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*;))'
+    //RESULT_TYPE='regexp:(\[*([BCDFIJSZV]|L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*;))'
     //ARRAY_BRACE='regexp:(\[+)'
     //PRIMITIVE_TYPE='regexp:([BCDFIJSZ])'
     //RESULT_PRIMITIVE='regexp:([BCDFIJSZV])'
-    REFERENCE_TYPE='regexp:(L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)'
-    REFERENCE_TYPE_ARRAY='regexp:\[+(L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)'
+    REFERENCE_TYPE='regexp:(L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;)'
+    REFERENCE_TYPE_ARRAY='regexp:\[+(L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;)'
     DESC_PRIMITIVE='regexp:\[*([BCDFIJSZV])'
-    //DESC2='regexp:\[*([BCDFIJSZ]|(L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;))'
-    METHOD_DESC_TOKEN='regexp:\(\[*([BCDFIJSZ]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)*\)\[*([BCDFIJSZV]|L([a-zA-z\$_][a-zA-Z0-9\$_]*/)*[a-zA-z\$_][a-zA-Z0-9\$_]*?;)'
+    //DESC2='regexp:\[*([BCDFIJSZ]|(L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;))'
+    METHOD_DESC_TOKEN='regexp:\(\[*([BCDFIJSZ]|L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;)*\)\[*([BCDFIJSZV]|L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;)'
     //METHOD_DESC='regexp:\(({DESC}|{REFERENCE_TYPE})*\)({DESC}|{REFERENCE_TYPE}|V)'
     LABEL_ID='regexp:(L\d+)'
-    TYPE_NAME='regexp:(([a-zA-z\$_][a-zA-Z0-9\$_]*/)+[a-zA-z\$_][a-zA-Z0-9\$_]*)'
-    identifier='regexp:([a-zA-z\$_][a-zA-Z0-9\$_]*)'
-    number='regexp:(\d+(\.\d*)?)'
+    TYPE_NAME='regexp:(([a-zA-Z\$_][a-zA-Z0-9\$_]*/)+[a-zA-Z\$_][a-zA-Z0-9\$_]*)'
+    identifier='regexp:([a-zA-Z\$_][a-zA-Z0-9\$_]*)'
+    number='regexp:(-?\d+(\.\d*)?)'
     string="regexp:('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")"
-    whitespace='regexp:([\n\r\t\f ])'
+    WHITE_SPACE='regexp:\s+'
   ]
   //implements("TYPE")="com.thiakil.idea.psi.PsiDescElement"
 }
 
 asmFile ::= TYPE_DECLARATION*
+
+CONSTANT ::= string | number | true | false | CLASS_CONSTANT
+
+private CLASS_CONSTANT ::= REFERENCE_TYPE ".class"
 
 CLASS_DECLARATION ::= CLASS_MODIFIERS? class CLASS_TYPE SUPER? INTERFACES? {pin=2}
 
@@ -81,10 +85,6 @@ private METHOD_DECLARATOR ::= METHOD_IDENTIFIER METHOD_DESC
 
 METHOD_DESC ::= METHOD_DESC_TOKEN
 
-//METHOD_DESC ::= "(" <<parseDescType true false>> ")" <<parseDescType false true>>
-
-//METHOD_DESC ::= METHOD_PARAM RESULT_TYPE
-
 private METHOD_PARAM ::= '(' FORMAL_PARAMETER* ')' //{recoverWhile="PARAM_RECOVER" pin=1}
 
 private PARAM_RECOVER ::= !(FORMAL_PARAMETER | ')')
@@ -109,7 +109,7 @@ FORMAL_PARAMETER ::= TYPE | identifier
 
 THROWS ::= "throws" CLASS_TYPE_LIST
 
-private CLASS_BODY_DECLARATION ::= INNER_CLASS_DECLARATION | FIELD_DECLARATION | METHOD_DECLARATION
+private CLASS_BODY_DECLARATION ::= INNER_CLASS_DECLARATION | FIELD_DECLARATION | METHOD_DECLARATION | ANNOTATION_ELEMENT
 
 CLASS_TYPE_LIST ::= CLASS_TYPE+
 
@@ -135,7 +135,23 @@ CLASS_TYPE ::= TYPE_NAME | identifier
 
 INTERFACE_TYPE ::= TYPE_NAME | identifier
 
-ANNOTATION_ELEMENT ::= "@" REFERENCE_TYPE "(" ")" {pin=1}
+ANNOTATION_ELEMENT ::= "@" REFERENCE_TYPE "(" ANNOTATION_ARGS? ")" {pin=1}
+
+ANNOTATION_ARGS ::= (ANNOTATION_ARG ",")* ANNOTATION_ARG
+
+ANNOTATION_ARG ::= ANNOTATION_KEY "=" ANNOTATION_VALUE {pin=2}
+
+ANNOTATION_KEY ::= identifier
+
+ANNOTATION_VALUE ::= CONSTANT | ANNOTATION_ARRAY | STATIC_FIELD_REF
+
+ANNOTATION_ARRAY ::= "{" ANNOTATION_ARRAY_VALUES* "}"
+
+STATIC_FIELD_REF ::= REFERENCE_TYPE "." identifier
+
+private ANNOTATION_ARRAY_VALUES ::= (ANNOTATION_ARRAY_VALUE ',')* ANNOTATION_ARRAY_VALUE
+
+ANNOTATION_ARRAY_VALUE ::= ANNOTATION_VALUE | ANNOTATION_ELEMENT
 
 private METHOD_BODY_ELEMENT ::= LABEL_DECLARATION | INSTRUCTION_KIND {recoverWhile="METHOD_RECOVERY"}
 
@@ -147,31 +163,25 @@ private INSTRUCTION_KIND ::= INSTRUCTION | INSTRUCTION_WITH_ARGS
 
 INSTRUCTION ::= NOP | ACONST_NULL | ICONST_M1 | ICONST_0 | ICONST_1 | ICONST_2 | ICONST_3 | ICONST_4 | ICONST_5 | LCONST_0 | LCONST_1 | FCONST_0 | FCONST_1 | FCONST_2 | DCONST_0 | DCONST_1 | IALOAD | LALOAD | FALOAD | DALOAD | AALOAD | BALOAD | CALOAD | SALOAD | IASTORE | LASTORE | FASTORE | DASTORE | AASTORE | BASTORE | CASTORE | SASTORE | POP | POP2 | DUP | DUP_X1 | DUP_X2 | DUP2 | DUP2_X1 | DUP2_X2 | SWAP | IADD | LADD | FADD | DADD | ISUB | LSUB | FSUB | DSUB | IMUL | LMUL | FMUL | DMUL | IDIV | LDIV | FDIV | DDIV | IREM | LREM | FREM | DREM | INEG | LNEG | FNEG | DNEG | ISHL | LSHL | ISHR | LSHR | IUSHR | LUSHR | IAND | LAND | IOR | LOR | IXOR | LXOR | I2L | I2F | I2D | L2I | L2F | L2D | F2I | F2L | F2D | D2I | D2L | D2F | I2B | I2C | I2S | LCMP | FCMPL | FCMPG | DCMPL | DCMPG | IRETURN | LRETURN | FRETURN | DRETURN | ARETURN | RETURN | ARRAYLENGTH | ATHROW | MONITORENTER | MONITOREXIT
 
-private INSTRUCTION_WITH_ARGS ::= LINE_NUMBER | NEW_INSN | LDC_INSN | ALOAD_INSN | INVOKE_METHOND_INSN | BI_PUSH | FIELD_INSN | NEW_ARRAY_INSN | ASTORE_INSN | ISTORE_INSN | INVOKEDYNAMIC_INSN | TRYCATCH | GOTO_INSN
+private INSTRUCTION_WITH_ARGS ::= LINE_NUMBER | NEW_INSN | LDC_INSN | LOAD_LOCAL_INSN | INVOKE_METHOND_INSN | PUSH_INSN | FIELD_INSN | NEW_ARRAY_INSN | STORE_LOCAL_INSN | INVOKEDYNAMIC_INSN | FLOW_CONTROL_INSNS | INC_INSN | RET_INSN | INSTANCEOF_INSN | CHECKCAST_INSN
+
+private FLOW_CONTROL_INSNS ::= TRYCATCH | JUMP_INSN | FRAME_INSN | TABLESWITCH_INSN
+
+RET_INSN ::= RET number
 
 LINE_NUMBER ::= LINENUMBER number LABEL_ID {pin=1}
 
 NEW_INSN ::= NEW TYPE_NAME {pin=1}
 
-LDC_INSN ::= LDC LDC_ARG {pin=1}
+LDC_INSN ::= LDC CONSTANT {pin=1}
 
-private LDC_ARG ::= string | number | LDC_CLASS_ARG
+LOAD_LOCAL_INSN ::= (ILOAD | LLOAD | FLOAD | DLOAD | ALOAD) number {pin=1}
 
-private LDC_CLASS_ARG ::= REFERENCE_TYPE ".class"
-
-ALOAD_INSN ::= ALOAD number {pin=1}
-
-ASTORE_INSN ::= ASTORE number {pin=1}
-
-ISTORE_INSN ::= ISTORE number {pin=1}
+STORE_LOCAL_INSN ::= (ISTORE | LSTORE | FSTORE | DSTORE | ASTORE) number {pin=1}
 
 INVOKE_METHOND_INSN ::= METHOD_INSN_OPCODE  CLASS_TYPE "." METHOD_IDENTIFIER METHOD_DESC {methods=[owner="CLASS_TYPE" methodName="METHOD_IDENTIFIER" desc="METHOD_DESC"] pin=1}
 
-METHOD_INSN_OPCODE ::= INVOKESPECIAL | INVOKESTATIC | INVOKEVIRTUAL
-
-//INVOKE_SPECIAL ::= INVOKESPECIAL CLASS_TYPE "." METHOD_IDENTIFIER METHOD_DESC {methods=[owner="CLASS_TYPE" methodName="METHOD_IDENTIFIER" desc="METHOD_DESC"] pin=1}
-
-//INVOKE_STATIC ::= INVOKESTATIC CLASS_TYPE "." METHOD_IDENTIFIER METHOD_DESC {methods=[owner="CLASS_TYPE" methodName="METHOD_IDENTIFIER" desc="METHOD_DESC"] pin=1}
+METHOD_INSN_OPCODE ::= INVOKESPECIAL | INVOKESTATIC | INVOKEVIRTUAL | INVOKEINTERFACE
 
 INVOKEDYNAMIC_INSN ::= INVOKEDYNAMIC METHOD_IDENTIFIER METHOD_DESC "[" HANDLE_REF INVOKEDYNAMIC_ARG_LIST "]" {pin=1}
 
@@ -183,7 +193,7 @@ HANDLE_ARGUMENTS ::= METHOD_DESC
 
 HANDLE_REF ::= CLASS_TYPE "." identifier METHOD_DESC
 
-BI_PUSH ::= BIPUSH number {pin=1}
+PUSH_INSN ::= (BIPUSH | SIPUSH) number {pin=1}
 
 FIELD_INSN ::= FIELD_INSN_OPCODE CLASS_TYPE "." identifier ":" TYPE {methods=[owner="CLASS_TYPE" fieldName="identifier" desc="TYPE"] pin=1}
 
@@ -199,4 +209,44 @@ PRIMITIVE_ARRAY_TYPE ::= T_BOOLEAN|T_CHAR|T_FLOAT|T_DOUBLE|T_BYTE|T_SHORT|T_INT|
 
 TRYCATCH ::= TRYCATCHBLOCK LABEL_REF LABEL_REF LABEL_REF CLASS_TYPE {pin=1}
 
-GOTO_INSN ::= GOTO LABEL_REF {pin=1}
+JUMP_INSN ::= JUMP_OPCODE LABEL_REF {pin=1}
+
+JUMP_OPCODE ::= IFEQ | IFNE | IFLT | IFGE | IFGT | IFLE | IF_ICMPEQ | IF_ICMPNE | IF_ICMPLT | IF_ICMPGE | IF_ICMPGT | IF_ICMPLE | IF_ACMPEQ | IF_ACMPNE | GOTO | JSR | IFNULL | IFNONNULL
+
+FRAME_INSN ::= FRAME FRAME_KIND {pin=1}
+
+private FRAME_KIND ::= FRAME_SAME | FRAME_FULL_NEW | FRAME_APPEND | FRAME_SAME1 | FRAME_CHOP
+
+FRAME_SAME ::= SAME
+
+FRAME_SAME1 ::= SAME1 FRAME_TYPE
+
+FRAME_CHOP ::= CHOP CHOP_AMOUNT
+CHOP_AMOUNT ::= number
+
+FRAME_FULL_NEW ::= (FULL | NEW) FRAME_TYPES_LIST FRAME_TYPES_LIST {pin=1}
+
+FRAME_TYPES_LIST ::= "[" FRAME_TYPE* "]" {recoverWhile=FRAME_TYPES_LIST_RECOVER pin=1}
+
+private FRAME_TYPES_LIST_RECOVER ::= !( "]" | METHOD_BODY_ELEMENT | LOCAL_VARIABLE | MAX_LOCALS | MAX_STACK)
+
+FRAME_TYPE ::= CLASS_TYPE | DESC_PRIMITIVE
+
+FRAME_APPEND ::= APPEND FRAME_TYPES_LIST {pin=1}
+
+INC_INSN ::= IINC VAR_INDEX INC_AMOUNT
+
+VAR_INDEX ::= number
+INC_AMOUNT ::= number
+
+INSTANCEOF_INSN ::= INSTANCEOF CLASS_TYPE
+
+CHECKCAST_INSN ::= CHECKCAST CLASS_TYPE
+
+TABLESWITCH_INSN ::= TABLESWITCH TABLESWITCH_LABELS TABLESWITCH_DEFAULT {pin=1}
+
+private TABLESWITCH_LABELS ::= TABLESWITCH_LABEL+
+
+TABLESWITCH_LABEL ::= number ":" LABEL_REF
+
+TABLESWITCH_DEFAULT ::= default ":" LABEL_REF
