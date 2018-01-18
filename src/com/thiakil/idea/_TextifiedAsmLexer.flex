@@ -38,11 +38,18 @@ IDENTIFIER=([a-zA-Z\$_][a-zA-Z0-9\$_]*)
 NUMBER=(-?[0-9]+(\.[0-9]*)?)
 STRING=('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")
 
-%state FRAME_INSN
+%xstate FRAME_INSN
 %xstates WAITING_GROUP, INSIDE_GROUP
 //%state INSIDE_GROUP
 
 %%
+
+<YYINITIAL,FRAME_INSN,WAITING_GROUP,INSIDE_GROUP>{
+    {WHITE_SPACE}               { return WHITE_SPACE; }
+    {EOL}                       { return EOL; }
+    {COMMENT}                   { return COMMENT; }
+}
+
 <YYINITIAL> {
   "true"                      { return TRUE; }
   "false"                     { return FALSE; }
@@ -238,6 +245,8 @@ STRING=('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")
   {REFERENCE_TYPE}            { return REFERENCE_TYPE; }
   {REFERENCE_TYPE_ARRAY}      { return REFERENCE_TYPE_ARRAY; }
   {DESC_PRIMITIVE}            { return DESC_PRIMITIVE; }
+  "["                         { return GROUP_OPENER; }//needs to be after desc because desc will match [ for array
+  "]"                         { return GROUP_CLOSER; }
   {METHOD_DESC_TOKEN}         { return METHOD_DESC_TOKEN; }
   {LABEL_ID}                  { return LABEL_ID; }
   {TYPE_NAME}                 { return TYPE_NAME; }
@@ -253,29 +262,29 @@ STRING=('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")
     "FULL"                      { yybegin(WAITING_GROUP); groupStateWaitingDouble = true; return FULL; }
     "NEW"                       { yybegin(WAITING_GROUP); groupStateWaitingDouble = true; return NEW; }
     "APPEND"                    { yybegin(WAITING_GROUP); groupStateWaitingDouble = false; return APPEND; }
+    [^]                         { yybegin(YYINITIAL); groupStateWaitingDouble = false; return BAD_CHARACTER2; }
 }
 
 <WAITING_GROUP> {
-    "["                         { return GROUP_OPENER; }
+    "["                         { yybegin(INSIDE_GROUP); return GROUP_OPENER; }
+    [^]                         { yybegin(YYINITIAL); groupStateWaitingDouble = false; return BAD_CHARACTER2; }
 }
 
 <INSIDE_GROUP> {
     {REFERENCE_TYPE}            { return REFERENCE_TYPE; }
+    {TYPE_NAME}                 { return TYPE_NAME; }
     {REFERENCE_TYPE_ARRAY}      { return REFERENCE_TYPE_ARRAY; }
     {DESC_PRIMITIVE}            { return DESC_PRIMITIVE; }
     "]"                         {
-        if (groupStateWaitingDouble)
+        if (groupStateWaitingDouble){
             yybegin(WAITING_GROUP);
-        else
+            groupStateWaitingDouble = false;
+        } else{
             yybegin(YYINITIAL);
+        }
         return GROUP_CLOSER;
     }
-}
-
-<YYINITIAL,FRAME_INSN,WAITING_GROUP,INSIDE_GROUP>{
-    {WHITE_SPACE}               { return WHITE_SPACE; }
-    {EOL}                       { return EOL; }
-    {COMMENT}                   { return COMMENT; }
+    [^]                         { yybegin(YYINITIAL); return BAD_CHARACTER2; }
 }
 
 [^] { return BAD_CHARACTER; }
