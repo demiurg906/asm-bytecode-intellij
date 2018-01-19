@@ -262,12 +262,12 @@ STRING=('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")
     "FULL"                      { yybegin(WAITING_GROUP); groupStateWaitingDouble = true; return FULL; }
     "NEW"                       { yybegin(WAITING_GROUP); groupStateWaitingDouble = true; return NEW; }
     "APPEND"                    { yybegin(WAITING_GROUP); groupStateWaitingDouble = false; return APPEND; }
-    [^]                         { yybegin(YYINITIAL); groupStateWaitingDouble = false; return BAD_CHARACTER2; }
+    [^]                         { yybegin(YYINITIAL); groupStateWaitingDouble = false; return BAD_CHARACTER; }
 }
 
 <WAITING_GROUP> {
     "["                         { yybegin(INSIDE_GROUP); return GROUP_OPENER; }
-    [^]                         { yybegin(YYINITIAL); groupStateWaitingDouble = false; return BAD_CHARACTER2; }
+    [^]                         { yybegin(YYINITIAL); groupStateWaitingDouble = false; return BAD_CHARACTER; }
 }
 
 <INSIDE_GROUP> {
@@ -284,7 +284,7 @@ STRING=('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")
         }
         return GROUP_CLOSER;
     }
-    [^]                         { yybegin(YYINITIAL); return BAD_CHARACTER2; }
+    [^]                         { yybegin(YYINITIAL); return BAD_CHARACTER; }
 }
 
 [^] { return BAD_CHARACTER; }
