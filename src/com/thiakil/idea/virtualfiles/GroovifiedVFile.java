@@ -1,4 +1,4 @@
-package com.thiakil.idea;
+package com.thiakil.idea.virtualfiles;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;

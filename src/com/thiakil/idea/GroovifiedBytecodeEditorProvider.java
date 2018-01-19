@@ -2,6 +2,7 @@ package com.thiakil.idea;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.thiakil.idea.virtualfiles.GroovifiedVFile;
 import org.jetbrains.annotations.NotNull;
 
 /**

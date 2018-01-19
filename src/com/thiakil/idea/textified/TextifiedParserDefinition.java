@@ -1,4 +1,4 @@
-package com.thiakil.idea;
+package com.thiakil.idea.textified;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.ParserDefinition;
@@ -11,6 +11,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
+import com.thiakil.idea.TextifiedAsmLexer;
 import com.thiakil.idea.parser.TextifiedAsmParser;
 import com.thiakil.idea.psi.TextifiedAsmFile;
 import com.thiakil.idea.psi.TextifiedAsmTypes;

@@ -1,4 +1,4 @@
-package com.thiakil.idea;
+package com.thiakil.idea.textified;
 
 import com.intellij.openapi.util.IconLoader;
 

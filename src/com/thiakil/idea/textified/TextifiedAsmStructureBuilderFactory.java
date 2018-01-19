@@ -1,4 +1,4 @@
-package com.thiakil.idea;
+package com.thiakil.idea.textified;
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.ide.structureView.StructureViewBuilder;

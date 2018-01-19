@@ -1,7 +1,7 @@
 package com.thiakil.idea.psi;
 
 import com.intellij.psi.tree.IElementType;
-import com.thiakil.idea.TextifiedBytecodeLanguage;
+import com.thiakil.idea.textified.TextifiedBytecodeLanguage;
 
 public class TextifiedAsmElementType extends IElementType {
 	public TextifiedAsmElementType(String debugName){

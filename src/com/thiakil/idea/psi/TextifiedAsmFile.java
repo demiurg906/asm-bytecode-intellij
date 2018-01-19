@@ -3,8 +3,8 @@ package com.thiakil.idea.psi;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.FileViewProvider;
-import com.thiakil.idea.TextifiedAsmFileType;
-import com.thiakil.idea.TextifiedBytecodeLanguage;
+import com.thiakil.idea.textified.TextifiedAsmFileType;
+import com.thiakil.idea.textified.TextifiedBytecodeLanguage;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;

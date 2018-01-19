@@ -1,4 +1,4 @@
-package com.thiakil.idea;
+package com.thiakil.idea.virtualfiles;
 
 import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.openapi.vfs.VirtualFile;

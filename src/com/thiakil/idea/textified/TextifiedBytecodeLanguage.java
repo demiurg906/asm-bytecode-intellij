@@ -1,4 +1,4 @@
-package com.thiakil.idea;
+package com.thiakil.idea.textified;
 
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
