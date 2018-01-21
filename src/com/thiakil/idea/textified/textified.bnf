@@ -15,7 +15,8 @@
   psiImplUtilClass="com.thiakil.idea.parser.TextifiedAsmParserUtil"
   //recoverWhile="LINEFEED"
   tokens=[
-    comment='regexp:(//.*|/\*(.|\n|\r)*?\*/)'
+    SINGLE_LINE_COMMENT='regexp:(//.*)'
+    MULTI_LINE_COMMENT='regexp:(/\*(.|\n|\r)*?\*/)'
     //REFERENCE_ARRAY='regexp:([\[]+L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;)'
     //PRIMITIVE_ARRAY='regexp:([\[]+)'
     //TYPE='regexp:(\[*([BCDFIJSZ]|L([a-zA-Z\$_][a-zA-Z0-9\$_]*/)*[a-zA-Z\$_][a-zA-Z0-9\$_]*;))'
@@ -37,6 +38,14 @@
     WHITE_SPACE='regexp:\s+'
     GROUP_OPENER='['
     GROUP_CLOSER=']'
+    CLASS_VERSION="// class version"
+    ACCESS_FLAGS="// access flags"
+    COMPILED_FROM="// compiled from:"
+    COMPILE_SOURCE="source name"
+    SIGNATURE="// signature"
+    SIGNATURE_VALUE="signature value"
+    DECLARATION="// declaration:"
+    DECLARATION_VALUE="declaration value"
   ]
   //implements("TYPE")="com.thiakil.idea.psi.PsiDescElement"
 }

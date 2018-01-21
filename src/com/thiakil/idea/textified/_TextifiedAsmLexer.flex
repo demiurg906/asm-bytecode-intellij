@@ -27,7 +27,8 @@ import static com.thiakil.idea.psi.TextifiedAsmTypes.*;
 EOL=\R
 WHITE_SPACE=\s+
 
-COMMENT=("//".*|"/"\*(.|\s)*?\*"/")
+SINGLE_LINE_COMMENT=("//".*)
+MULTI_LINE_COMMENT=("/"\*(.|\s)*?\*"/")
 REFERENCE_TYPE=(L([a-zA-Z\$_][a-zA-Z0-9\$_]*"/")*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;)
 REFERENCE_TYPE_ARRAY=\[+(L([a-zA-Z\$_][a-zA-Z0-9\$_]*"/")*[a-zA-Z\$_][a-zA-Z0-9\$_]*?;)
 DESC_PRIMITIVE=\[*([BCDFIJSZV])
@@ -47,7 +48,8 @@ STRING=('([^'\\]|\\.)*'|\"([^\"\\]|\\.)*\")
 <YYINITIAL,FRAME_INSN,WAITING_GROUP,INSIDE_GROUP>{
     {WHITE_SPACE}               { return WHITE_SPACE; }
     {EOL}                       { return EOL; }
-    {COMMENT}                   { return COMMENT; }
+    {MULTI_LINE_COMMENT}        { return MULTI_LINE_COMMENT; }
+    {SINGLE_LINE_COMMENT}        { return SINGLE_LINE_COMMENT; }
 }
 
 <YYINITIAL> {

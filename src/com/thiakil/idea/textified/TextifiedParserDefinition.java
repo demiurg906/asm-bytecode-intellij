@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 public class TextifiedParserDefinition implements ParserDefinition {
 	public static final IFileElementType FILE = new IFileElementType(TextifiedBytecodeLanguage.INSTANCE);
 	public static final TokenSet WHITE_SPACES = TokenSet.create(TokenType.WHITE_SPACE);
-	public static final TokenSet COMMENTS = TokenSet.create(TextifiedAsmTypes.COMMENT);
+	public static final TokenSet COMMENTS = TokenSet.create(TextifiedAsmTypes.SINGLE_LINE_COMMENT, TextifiedAsmTypes.MULTI_LINE_COMMENT);
 	public static final TokenSet STRINGS = TokenSet.create(TextifiedAsmTypes.STRING);
 
 	@NotNull
