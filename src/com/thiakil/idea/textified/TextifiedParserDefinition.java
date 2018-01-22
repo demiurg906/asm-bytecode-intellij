@@ -26,7 +26,7 @@ public class TextifiedParserDefinition implements ParserDefinition {
 	@NotNull
 	@Override
 	public Lexer createLexer(Project project) {
-		return new TextifiedAsmLexer();
+		return new TextifiedLexer();
 	}
 	
 	@Override
