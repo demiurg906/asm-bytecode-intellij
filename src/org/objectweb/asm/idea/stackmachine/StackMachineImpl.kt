@@ -12,15 +12,16 @@ class StackMachineImpl : StackMachine {
     override val variables: Map<Int, LocalVariable>
         get() = _variables.toMap()
 
-    override fun execute(insn: Insn) {
-        when (insn) {
+    override fun execute(insn: Insn): StackOperationResult {
+        return when (insn) {
             is IntConst -> pushInt(insn.operand)
             is LocalLoad -> pushVariable(insn.index)
             is BinaryOperation -> executeBinaryOperation(insn.op)
+            else -> throw IllegalArgumentException("Unknown operation ${insn.opcode} ($insn).")
         }
     }
 
-    private fun executeBinaryOperation(op: OperatorType) {
+    private fun executeBinaryOperation(op: OperatorType): StackOperationResult {
         val right = (_stack.pop()?.value) ?: throw IllegalArgumentException("No first argument for operation $op.")
         val left = (_stack.pop()?.value) ?: throw IllegalArgumentException("No second argument for operation $op.")
 
@@ -33,16 +34,20 @@ class StackMachineImpl : StackMachine {
         }
 
         pushInt(result)
+
+        return StackOperationResult(removed = 2, addedCells = _stack.takeLast(1))
     }
 
-    private fun pushInt(i: Int) {
+    private fun pushInt(i: Int): StackOperationResult {
         _stack.add(StackElement(i))
+        return StackOperationResult(removed = 0, addedCells = _stack.takeLast(1))
     }
 
-    private fun pushVariable(index: Int) {
+    private fun pushVariable(index: Int): StackOperationResult {
         val variable = _variables[index]
                 ?: throw IllegalArgumentException("No name for variable with index $index is found!")
-        _stack.add(StackElement(variable.value))
+
+        return pushInt(variable.value)
     }
 }
 
