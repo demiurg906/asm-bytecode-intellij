@@ -19,8 +19,7 @@ data class LocalVariable(val name: String, var value: Int)
 
 interface StackMachine {
     companion object {
-        private val machine = StackMachineImpl()
-        fun getInstance(): StackMachine = machine
+        fun getInstance(): StackMachine = StackMachineImpl()
     }
 
     val stack: List<StackElement>
