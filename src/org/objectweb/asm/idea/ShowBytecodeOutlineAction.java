@@ -42,6 +42,8 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import org.objectweb.asm.idea.config.ASMPluginComponent;
+import org.objectweb.asm.idea.stackmachine.StackElement;
+import org.objectweb.asm.idea.stackmachine.StackMachineService;
 import reloc.org.objectweb.asm.ClassReader;
 import reloc.org.objectweb.asm.ClassVisitor;
 import reloc.org.objectweb.asm.util.ASMifier;
@@ -50,6 +52,7 @@ import reloc.org.objectweb.asm.util.TraceClassVisitor;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 
@@ -235,6 +238,12 @@ public class ShowBytecodeOutlineAction extends AnAction {
                 if (config.isSkipFrames()) flags = flags | ClassReader.SKIP_FRAMES;
                 if (config.isExpandFrames()) flags = flags | ClassReader.EXPAND_FRAMES;
                 if (config.isSkipCode()) flags = flags | ClassReader.SKIP_CODE;
+
+                // TODO: проводим инициализацию мапы <строчка, инструкция>
+//                Map<Integer, Insn> map = TODO();
+//
+//                StackMachineService service = StackMachineService.Companion.getInstance(project);
+//                service.initializeClass(map);
 
                 reader.accept(visitor, flags);
                 BytecodeOutline.getInstance(project).setCode(file, stringWriter.toString());
