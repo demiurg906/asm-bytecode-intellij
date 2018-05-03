@@ -24,6 +24,7 @@ package org.objectweb.asm.idea;
  * Time: 22:18
  */
 
+import com.intellij.codeInsight.intention.impl.ShowIntentionActionsHandler;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.diff.DiffContent;
@@ -44,7 +45,10 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.ui.PopupHandler;
+import org.objectweb.asm.idea.actions.StartNewStackAction;
 import org.objectweb.asm.idea.config.ASMPluginComponent;
+import org.objectweb.asm.idea.stackmachine.StackMachineService;
+import org.objectweb.asm.idea.ui.StackViewer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -89,13 +93,25 @@ public class ACodeView extends SimpleToolWindowPanel implements Disposable {
         document = editorFactory.createDocument("");
         editor = editorFactory.createEditor(document, project, FileTypeManager.getInstance().getFileTypeByExtension(extension), true);
 
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+
         final JComponent editorComponent = editor.getComponent();
-        add(editorComponent);
+        mainPanel.add(editorComponent);
+
+        StackViewer stackViewer = new StackViewer();
+        StackMachineService.Companion.getInstance(project).registerStackViewer(stackViewer);
+        mainPanel.add(stackViewer.getComponent());
+
+        add(mainPanel);
+
         final AnAction diffAction = createShowDiffAction();
         DefaultActionGroup group = new DefaultActionGroup();
         group.add(diffAction);
         group.add(new ShowSettingsAction());
-        
+        group.add(new StartNewStackAction());
+
+
         final ActionManager actionManager = ActionManager.getInstance();
         final ActionToolbar actionToolBar = actionManager.createActionToolbar("ASM", group, true);
         final JPanel buttonsPanel = new JPanel(new BorderLayout());
