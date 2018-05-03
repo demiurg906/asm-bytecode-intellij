@@ -6,7 +6,7 @@ interface Insn {
 
 enum class OperatorType {
     ADD, SUBTRACT, REMAINDER,
-    MULTIPLY, DIVIDE
+    MULTIPLY, DIVIDE;
 }
 
 data class BinaryOperation(override val opcode: Int, val op: OperatorType) : Insn
