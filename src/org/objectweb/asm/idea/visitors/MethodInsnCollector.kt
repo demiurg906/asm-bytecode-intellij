@@ -84,4 +84,12 @@ class MethodInsnCollector(access: Int, name: String?,
 
         }
     }
+
+    override fun visitIntInsn(opcode: Int, operand: Int) {
+        when (opcode) {
+            BIPUSH -> {
+                collectedInstructions.add(IntConst(opcode, operand))
+            }
+        }
+    }
 }

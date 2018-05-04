@@ -1,10 +1,7 @@
 package org.objectweb.asm.idea.visitors
 
 import reloc.org.objectweb.asm.Opcodes.*
-import reloc.org.objectweb.asm.Opcodes.ASM5
-import reloc.org.objectweb.asm.util.Printer
 import reloc.org.objectweb.asm.util.Textifier
-import java.io.PrintWriter
 
 class MethodTextifier : Textifier(ASM5) {
     val lineNumbers: MutableList<Int> = mutableListOf()
@@ -28,6 +25,16 @@ class MethodTextifier : Textifier(ASM5) {
 
         when (opcode) {
             ILOAD, ISTORE -> lineNumbers.add(super.text.size - 1)
+        }
+    }
+
+    override fun visitIntInsn(opcode: Int, operand: Int) {
+        super.visitIntInsn(opcode, operand)
+
+        when (opcode) {
+            BIPUSH -> {
+                lineNumbers.add(super.text.size - 1)
+            }
         }
     }
 }
