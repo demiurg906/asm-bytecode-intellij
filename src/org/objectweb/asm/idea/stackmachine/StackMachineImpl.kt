@@ -18,6 +18,7 @@ class StackMachineImpl : StackMachine {
             is LocalLoad -> pushVariable(insn.index)
             is LocalStore -> storeVariable(insn.index)
             is BinaryOperation -> executeBinaryOperation(insn.op)
+            else -> TODO("$insn is not handled yet.")
         }
     }
 
