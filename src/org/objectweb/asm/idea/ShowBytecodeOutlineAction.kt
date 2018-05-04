@@ -21,18 +21,11 @@ package org.objectweb.asm.idea
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
-import com.intellij.openapi.actionSystem.Presentation
-import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.compiler.CompileContext
-import com.intellij.openapi.compiler.CompileScope
-import com.intellij.openapi.compiler.CompileStatusNotification
 import com.intellij.openapi.compiler.CompilerManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.impl.text.PsiAwareTextEditorImpl
-import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.CompilerModuleExtension
@@ -42,11 +35,12 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
 import org.objectweb.asm.idea.config.ASMPluginComponent
-import org.objectweb.asm.idea.stackmachine.StackElement
+import org.objectweb.asm.idea.insns.Insn
+import org.objectweb.asm.idea.stackmachine.CommandsMap
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
+import org.objectweb.asm.idea.visitors.MethodTextifier
 import reloc.org.objectweb.asm.ClassReader
-
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -62,8 +56,8 @@ import java.util.concurrent.Semaphore
  */
 class ShowBytecodeOutlineAction : AnAction() {
 
-    override fun update(e: AnActionEvent?) {
-        val virtualFile = e!!.getData(PlatformDataKeys.VIRTUAL_FILE)
+    override fun update(e: AnActionEvent) {
+        val virtualFile = e.getData(PlatformDataKeys.VIRTUAL_FILE)
         val project = e.getData(PlatformDataKeys.PROJECT)
         val presentation = e.presentation
         if (project == null || virtualFile == null) {
@@ -77,7 +71,10 @@ class ShowBytecodeOutlineAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val virtualFile = e.getData(PlatformDataKeys.VIRTUAL_FILE)
         val project = e.getData(PlatformDataKeys.PROJECT)
-        if (project == null || virtualFile == null) return
+        if (project == null || virtualFile == null) {
+            return
+        }
+
         val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
         if (psiFile is PsiClassOwner) {
             val module = ModuleUtil.findModuleForPsiElement(psiFile)
@@ -97,7 +94,7 @@ class ShowBytecodeOutlineAction : AnAction() {
                 application.runWriteAction { FileDocumentManager.getInstance().saveAllDocuments() }
                 application.executeOnPooledThread {
                     val compileScope = compilerManager.createFilesCompileScope(files)
-                    val result = arrayOf<VirtualFile>(null)
+                    val result = arrayOf<VirtualFile?>(null)
                     val outputDirectories = cme?.getOutputRoots(true)
                     val semaphore = Semaphore(1)
                     try {
@@ -164,7 +161,7 @@ class ShowBytecodeOutlineAction : AnAction() {
                 val sb = StringBuilder(psiClass.qualifiedName!!)
                 while (psiClass.containingClass != null) {
                     sb.setCharAt(sb.lastIndexOf("."), '$')
-                    psiClass = psiClass.containingClass
+                    psiClass = psiClass.containingClass as PsiClass
                 }
                 val classFileName = sb.toString().replace('.', '/') + ".class"
                 for (outputDirectory in outputDirectories!!) {
@@ -196,62 +193,36 @@ class ShowBytecodeOutlineAction : AnAction() {
      * @param project the project instance
      * @param file    the class file
      */
-    private fun updateToolWindowContents(project: Project?, file: VirtualFile?) {
+    private fun updateToolWindowContents(project: Project, file: VirtualFile?) {
         ApplicationManager.getApplication().runWriteAction(Runnable {
             if (file == null) {
                 BytecodeOutline.getInstance(project).setCode(file, Constants.NO_CLASS_FOUND)
-                BytecodeASMified.getInstance(project).setCode(file, Constants.NO_CLASS_FOUND)
-                GroovifiedView.getInstance(project).setCode(file, Constants.NO_CLASS_FOUND)
-                ToolWindowManager.getInstance(project!!).getToolWindow("ASM").activate(null)
+                ToolWindowManager.getInstance(project).getToolWindow("ASM").activate(null)
                 return@Runnable
             }
-            //                ClassInsnCollector visitor = getClassInsnCollector(file, project);
-            //                if (visitor == null) return;
-            //
-            //                List<MethodInsnCollector> methodVisitors = visitor.getMethodVisitors();
-            //                List<ExtendedTextifier> printers = visitor.getPrinters();
 
+            val (plainText, collectedInsns, lineNumbers) = getMethodsInfo(file, project)
+            val service = StackMachineService.getInstance(project)
+//            service.initializeClass(commandsMap)
 
-            // TODO: проводим инициализацию мапы <строчка, инструкция>
-            //                Map<Integer, Insn> map = TODO();
-            //
-            //                StackMachineService service = StackMachineService.Companion.getInstance(project);
-            //                service.initializeClass(map);
-
-            // groovified printer
-            //                stringWriter.getBuffer().setLength(0);
-            //                reader.accept(new TraceClassVisitor(null, new GroovifiedTextifier(config.getCodeStyle()), new PrintWriter(stringWriter)), ClassReader.SKIP_FRAMES|ClassReader.SKIP_DEBUG);
-            //
-            //                GroovifiedView.getInstance(project).setCode(file,stringWriter.toString());
-
-            //                stringWriter.getBuffer().setLength(0);
-            //
-            // asmified printer
-            //                reader.accept(new TraceClassVisitor(null,
-            //                        new ASMifier(),
-            //                        new PrintWriter(stringWriter)), flags);
-
-            val asmified = BytecodeASMified.getInstance(project)
-            GroovifiedView.getInstance(project).setCode(file, "groovified")
+            val bytecodeOutline = BytecodeOutline.getInstance(project)
             val psiFile = PsiFileFactory.getInstance(project!!).createFileFromText("asm.java", "asmified")
             CodeStyleManager.getInstance(project).reformat(psiFile)
-            asmified.setCode(file, psiFile.text)
+            bytecodeOutline.setCode(file, plainText)
             ToolWindowManager.getInstance(project).getToolWindow("ASM").activate(null)
-            println("lal")
         })
     }
 
-    private fun getMethodsInfo(file: VirtualFile, project: Project): ClassInsnCollector? {
-        val stringWriter = StringWriter()
-        val printWriter = PrintWriter(stringWriter)
+    data class MethodInfo(val plainText: String, val instructions: List<Insn>,
+                          val lineNumbers: List<Int>)
 
-
+    private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {
         var reader: ClassReader? = null
         try {
             file.refresh(false, false)
             reader = ClassReader(file.contentsToByteArray())
         } catch (e: IOException) {
-            return null
+            TODO("normal exception")
         }
 
         var flags = 0
@@ -264,12 +235,25 @@ class ShowBytecodeOutlineAction : AnAction() {
             flags = flags or ClassReader.EXPAND_FRAMES
         if (config.isSkipCode) flags = flags or ClassReader.SKIP_CODE
 
-
-        BytecodeOutline.getInstance(project).setCode(file, "bytecooode")
-
         val visitor = ClassInsnCollector()
         reader.accept(visitor, flags)
-        return visitor
+
+        // internal visitor and printer
+        val methodVisitor = visitor.methodVisitors[0]
+        val methodPrinter: MethodTextifier = visitor.printers[0]
+
+        // get string representation
+        val stringWriter = StringWriter()
+        val printWriter = PrintWriter(stringWriter)
+        methodPrinter.print(printWriter)
+
+        // indexes corresponding to lines of every instruction
+        val lineNumbers = methodPrinter.lineNumbers
+
+        // instructions of method
+        val collectedInstructions = methodVisitor.collectedInstructions
+
+        return MethodInfo(stringWriter.toString(), collectedInstructions, lineNumbers)
     }
 
 
