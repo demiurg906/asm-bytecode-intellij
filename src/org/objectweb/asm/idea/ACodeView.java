@@ -24,7 +24,6 @@ package org.objectweb.asm.idea;
  * Time: 22:18
  */
 
-import com.intellij.codeInsight.intention.impl.ShowIntentionActionsHandler;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.diff.DiffContent;
@@ -45,6 +44,7 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.ui.PopupHandler;
+import org.objectweb.asm.idea.actions.EmulateLineAction;
 import org.objectweb.asm.idea.actions.StartNewStackAction;
 import org.objectweb.asm.idea.config.ASMPluginComponent;
 import org.objectweb.asm.idea.stackmachine.StackMachineService;
@@ -52,9 +52,6 @@ import org.objectweb.asm.idea.ui.StackViewer;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 /**
  * Base class for editors which displays bytecode or ASMified code.
@@ -100,7 +97,9 @@ public class ACodeView extends SimpleToolWindowPanel implements Disposable {
         mainPanel.add(editorComponent);
 
         StackViewer stackViewer = new StackViewer();
-        StackMachineService.Companion.getInstance(project).registerStackViewer(stackViewer);
+        StackMachineService service = StackMachineService.Companion.getInstance(project);
+        service.registerStackViewer(stackViewer);
+        service.registerBytecodeEditor(editor);
         mainPanel.add(stackViewer.getComponent());
 
         add(mainPanel);
@@ -110,7 +109,7 @@ public class ACodeView extends SimpleToolWindowPanel implements Disposable {
         group.add(diffAction);
         group.add(new ShowSettingsAction());
         group.add(new StartNewStackAction());
-
+        group.add(new EmulateLineAction());
 
         final ActionManager actionManager = ActionManager.getInstance();
         final ActionToolbar actionToolBar = actionManager.createActionToolbar("ASM", group, true);
@@ -130,8 +129,6 @@ public class ACodeView extends SimpleToolWindowPanel implements Disposable {
         document.setText(code);
         if (file != null) previousFile = file;
     }
-
-
 
     public void dispose() {
         if (editor != null) {

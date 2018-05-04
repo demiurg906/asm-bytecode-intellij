@@ -11,11 +11,21 @@ class StartNewStackAction : AnAction("Init stack", "", AllIcons.General.Run) {
         val project = e.project ?: return
         val service = StackMachineService.getInstance(project)
         ApplicationManager.getApplication().invokeLater {
-            service.stackViewer.removeLastItem()
+            service.emulateMachineUntil()
         }
     }
 
-    override fun toString(): String = "Init stack"
+    override fun displayTextInToolbar(): Boolean = true
+}
+
+class EmulateLineAction : AnAction("Emulate line", "", AllIcons.Actions.StepOut) {
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = e.project ?: return
+        val service = StackMachineService.getInstance(project)
+        ApplicationManager.getApplication().invokeLater {
+            service.emulateOneLine()
+        }
+    }
 
     override fun displayTextInToolbar(): Boolean = true
 }

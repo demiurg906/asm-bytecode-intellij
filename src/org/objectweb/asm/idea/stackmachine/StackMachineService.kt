@@ -1,6 +1,7 @@
 package org.objectweb.asm.idea.stackmachine
 
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import org.objectweb.asm.idea.insns.Insn
 import org.objectweb.asm.idea.ui.StackViewer
@@ -16,9 +17,11 @@ interface StackMachineService {
     fun initializeClass(map: CommandsMap)
     val stackMachine: StackMachine
     val stackViewer: StackViewer
+    val currentLine: Int
 
-    fun emulateMachineUntil(lineNumber: Int)
-    fun emulateOneLine(lineNumber: Int)
+    fun emulateMachineUntil()
+    fun emulateOneLine()
 
     fun registerStackViewer(stackViewer: StackViewer)
+    fun registerBytecodeEditor(editor: Editor)
 }

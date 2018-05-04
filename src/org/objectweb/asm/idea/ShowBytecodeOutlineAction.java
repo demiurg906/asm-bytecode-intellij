@@ -40,18 +40,14 @@ import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.*;
-import com.intellij.psi.codeStyle.CodeStyleManager;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.idea.config.ASMPluginComponent;
-import org.objectweb.asm.idea.stackmachine.StackElement;
-import org.objectweb.asm.idea.stackmachine.StackMachineService;
 import org.objectweb.asm.idea.visitors.ClassInsnCollector;
 import reloc.org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 
@@ -248,11 +244,12 @@ public class ShowBytecodeOutlineAction extends AnAction {
 //                        new ASMifier(),
 //                        new PrintWriter(stringWriter)), flags);
 
-                final BytecodeASMified asmified = BytecodeASMified.getInstance(project);
-                GroovifiedView.getInstance(project).setCode(file, "groovified");
-                PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText("asm.java", "asmified");
-                CodeStyleManager.getInstance(project).reformat(psiFile);
-                asmified.setCode(file, psiFile.getText());
+                BytecodeOutline.getInstance(project).setCode(file, "aaa\nbbb\nccc\nddd\neee\n");
+//                final BytecodeASMified asmified = BytecodeASMified.getInstance(project);
+//                GroovifiedView.getInstance(project).setCode(file, "groovified");
+//                PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText("asm.java", "asmified");
+//                CodeStyleManager.getInstance(project).reformat(psiFile);
+//                asmified.setCode(file, psiFile.getText());
                 ToolWindowManager.getInstance(project).getToolWindow("ASM").activate(null);
                 System.out.println("lal");
             }
