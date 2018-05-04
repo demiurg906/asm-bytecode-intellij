@@ -42,6 +42,8 @@ class MethodInsnCollector(access: Int, name: String?,
                 collectedInstructions.add(IntConst(ICONST_5, 5))
             }
 
+
+
         // binary opcodes
             IADD, FADD,
             LADD, DADD -> {
@@ -74,6 +76,10 @@ class MethodInsnCollector(access: Int, name: String?,
         when (opcode) {
             ILOAD -> {
                 collectedInstructions.add(LocalLoad(opcode, localIdx))
+            }
+
+            ISTORE -> {
+                collectedInstructions.add(LocalStore(opcode, localIdx))
             }
 
         }

@@ -217,7 +217,7 @@ class ShowBytecodeOutlineAction : AnAction() {
                           val lineNumbers: List<Int>)
 
     private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {
-        var reader: ClassReader? = null
+        var reader: ClassReader?
         try {
             file.refresh(false, false)
             reader = ClassReader(file.contentsToByteArray())
@@ -240,7 +240,7 @@ class ShowBytecodeOutlineAction : AnAction() {
 
         // internal visitor and printer
         val methodVisitor = visitor.methodVisitors[0]
-        val methodPrinter: MethodTextifier = visitor.printers[0]
+        val methodPrinter= visitor.printers[0]
 
         // get string representation
         val stringWriter = StringWriter()

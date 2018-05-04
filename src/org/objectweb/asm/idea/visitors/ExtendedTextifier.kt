@@ -27,7 +27,7 @@ class MethodTextifier : Textifier(ASM5) {
         super.visitVarInsn(opcode, `var`)
 
         when (opcode) {
-            ILOAD -> lineNumbers.add(super.text.size - 1)
+            ILOAD, ISTORE -> lineNumbers.add(super.text.size - 1)
         }
     }
 }
