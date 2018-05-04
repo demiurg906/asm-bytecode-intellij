@@ -3,6 +3,7 @@ package org.objectweb.asm.idea.ui
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import org.objectweb.asm.idea.stackmachine.StackMachine
+import java.awt.GridLayout
 import javax.swing.BoxLayout
 import javax.swing.JList
 import javax.swing.JPanel
@@ -20,16 +21,17 @@ class StackViewer {
     private val variablesList: JBList<String> = JBList()
 
     init {
-        globalPanel.layout = BoxLayout(globalPanel, BoxLayout.X_AXIS)
+        globalPanel.layout = GridLayout(1, 2)
         globalPanel.add(panelWithList(variablesList, "Variables:"))
         globalPanel.add(panelWithList(stackList, "Stack:"))
     }
 
     private fun panelWithList(list: JBList<*>, label: String): JPanel {
         val panel = JPanel()
+        panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
+
         panel.add(JBLabel(label))
 
-        panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
         initListSettings(list)
         panel.add(list)
         return panel
