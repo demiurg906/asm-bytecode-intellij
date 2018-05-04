@@ -1,5 +1,7 @@
 package org.objectweb.asm.idea.insns
 
+import reloc.org.objectweb.asm.Label
+
 sealed class Insn(open val opcode: Int)
 
 enum class OperatorType {
@@ -35,7 +37,9 @@ enum class ComparatorType {
  * DCMPL — compare two doubles
  * DCMPG — compare two doubles
  */
-data class CompareOperation(override val opcode: Int, val comparatorType: ComparatorType, val type: PrimitiveType) : Insn(opcode)
+data class CompareOperation(override val opcode: Int,
+                            val comparatorType: ComparatorType,
+                            val type: PrimitiveType) : Insn(opcode)
 
 
 // !! has reference to another command
@@ -45,7 +49,9 @@ data class CompareOperation(override val opcode: Int, val comparatorType: Compar
 // if_icmple
 // if_icmplt
 // if_icmpne
-data class IntCompareJump(override val opcode: Int, val comparatorType: ComparatorType) : Insn(opcode)
+data class IntCompareJump(override val opcode: Int,
+                          val comparatorType: ComparatorType,
+                          val target: Label) : Insn(opcode)
 
 // !! has reference to another command
 // ifeq
@@ -53,7 +59,9 @@ data class IntCompareJump(override val opcode: Int, val comparatorType: Comparat
 // ifgt
 // ifle
 // iflt
-data class ZeroCompareJump(override val opcode: Int, val comparatorType: ComparatorType) : Insn(opcode)
+data class ZeroCompareJump(override val opcode: Int,
+                           val comparatorType: ComparatorType,
+                           val target: Label) : Insn(opcode)
 
 // !! has reference to another command
 // ifnonnull
@@ -62,9 +70,11 @@ data class ZeroCompareJump(override val opcode: Int, val comparatorType: Compara
  * [comparatorType] has value EQUAL if equals to null operation,
  * NOT_EQUAL otherwise
  */
-data class NullCompareJump(override val opcode: Int, val comparatorType: ComparatorType) : Insn(opcode)
+data class NullCompareJump(override val opcode: Int,
+                           val comparatorType: ComparatorType,
+                           val target: Label) : Insn(opcode)
+
+data class Goto(override val opcode: Int, val target: Label): Insn(opcode)
 
 
-
-data class Goto(override val opcode: Int): Insn(opcode)
 // TODO if_acmpne

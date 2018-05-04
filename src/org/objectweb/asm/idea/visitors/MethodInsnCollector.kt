@@ -97,6 +97,11 @@ class MethodInsnCollector(access: Int, name: String?,
                 collectedInstructions.add(BinaryOperation(opcode, OperatorType.REMAINDER, primitiveTypeFromOpcode(opcode)))
             }
 
+            LCMP, FCMPL, FCMPG,
+            DCMPL, DCMPG -> {
+                collectedInstructions.add(CompareOperation(opcode, comparatorTypeFromOpcode(opcode), primitiveTypeFromOpcode(opcode)))
+            }
+
         }
         super.visitInsn(opcode)
     }
@@ -125,30 +130,26 @@ class MethodInsnCollector(access: Int, name: String?,
         super.visitIntInsn(opcode, operand)
     }
 
-    override fun visitJumpInsn(opcode: Int, label: Label?) {
+    override fun visitJumpInsn(opcode: Int, label: Label) {
         when (opcode) {
             IF_ICMPEQ, IF_ICMPGE, IF_ICMPGT,
             IF_ICMPLE, IF_ICMPLT, IF_ICMPNE -> {
-                collectedInstructions.add(IntCompareJump(opcode, comparatorTypeFromOpcode(opcode)))
+                collectedInstructions.add(IntCompareJump(opcode, comparatorTypeFromOpcode(opcode), label))
             }
 
             IFNONNULL -> {
-                collectedInstructions.add(NullCompareJump(opcode, ComparatorType.NOT_EQUAL))
+                collectedInstructions.add(NullCompareJump(opcode, ComparatorType.NOT_EQUAL, label))
             }
 
             IFNULL -> {
-                collectedInstructions.add(NullCompareJump(opcode, ComparatorType.EQUAL))
+                collectedInstructions.add(NullCompareJump(opcode, ComparatorType.EQUAL, label))
             }
 
             IFEQ, IFGE, IFGT,
             IFLE, IFLT, IFNE -> {
-                collectedInstructions.add(ZeroCompareJump(opcode, comparatorTypeFromOpcode(opcode)))
+                collectedInstructions.add(ZeroCompareJump(opcode, comparatorTypeFromOpcode(opcode), label))
             }
 
-            LCMP, FCMPL, FCMPG,
-            DCMPL, DCMPG -> {
-                collectedInstructions.add(CompareOperation(opcode, comparatorTypeFromOpcode(opcode), primitiveTypeFromOpcode(opcode)))
-            }
         }
 
         super.visitJumpInsn(opcode, label)
