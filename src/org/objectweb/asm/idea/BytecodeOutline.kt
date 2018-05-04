@@ -42,6 +42,8 @@ import org.objectweb.asm.idea.actions.StartNewStackAction
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.ui.StackViewer
 import java.awt.BorderLayout
+import java.awt.event.KeyEvent
+import java.awt.event.KeyListener
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 
@@ -80,6 +82,21 @@ class BytecodeOutline @JvmOverloads constructor(
         val editorComponent = editor.component
         mainPanel.add(editorComponent)
 
+        editor.contentComponent.addKeyListener(object : KeyListener {
+            private val service = StackMachineService.getInstance(project)
+
+            override fun keyTyped(event: KeyEvent) {}
+
+            override fun keyPressed(event: KeyEvent) {
+                when (event.keyCode) {
+                    KeyEvent.VK_F7 -> service.emulateMachineUntil()
+                    KeyEvent.VK_F8 -> service.emulateOneLine()
+                }
+            }
+
+            override fun keyReleased(event: KeyEvent) {}
+        })
+
         val stackViewer = StackViewer()
         val service = StackMachineService.getInstance(project)
         service.registerStackViewer(stackViewer)
@@ -89,8 +106,14 @@ class BytecodeOutline @JvmOverloads constructor(
         add(mainPanel)
 
         val group = DefaultActionGroup()
-        group.add(StartNewStackAction())
-        group.add(EmulateLineAction())
+
+        val runToCursorAction = StartNewStackAction()
+        // runToCursorAction.registerCustomShortcutSet(KeyEvent.VK_7, 0, editor.component)
+        group.add(runToCursorAction)
+
+        val nextLineAction = EmulateLineAction()
+        // nextLineAction.registerCustomShortcutSet(KeyEvent.VK_8, 0, editor.component)
+        group.add(nextLineAction)
 
         val actionManager = ActionManager.getInstance()
         val actionToolBar = actionManager.createActionToolbar("ASM", group, true)
@@ -98,6 +121,8 @@ class BytecodeOutline @JvmOverloads constructor(
         buttonsPanel.add(actionToolBar.component, BorderLayout.CENTER)
         PopupHandler.installPopupHandler(editor.contentComponent, group, "ASM", actionManager)
         setToolbar(buttonsPanel)
+
+
     }
 
     fun setCode(file: VirtualFile?, code: String) {
