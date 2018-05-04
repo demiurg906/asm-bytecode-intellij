@@ -38,5 +38,4 @@ class StackViewer {
         SwingUtilities.updateComponentTreeUI(panel)
     }
 
-
 }

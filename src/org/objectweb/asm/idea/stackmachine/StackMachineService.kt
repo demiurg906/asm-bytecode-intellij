@@ -5,8 +5,9 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import org.objectweb.asm.idea.insns.Insn
 import org.objectweb.asm.idea.ui.StackViewer
+import java.util.*
 
-typealias CommandsMap = Map<Int, Insn>
+typealias CommandsMap = SortedMap<Int, Insn>
 
 interface StackMachineService {
     companion object {

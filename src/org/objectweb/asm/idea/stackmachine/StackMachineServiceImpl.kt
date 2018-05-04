@@ -2,6 +2,7 @@ package org.objectweb.asm.idea.stackmachine
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
+import org.objectweb.asm.idea.insns.Insn
 import org.objectweb.asm.idea.ui.StackViewer
 
 class StackMachineServiceImpl : StackMachineService {
@@ -11,7 +12,7 @@ class StackMachineServiceImpl : StackMachineService {
     }
 
     private var _stackMachine: StackMachine = StackMachine.getInstance()
-    private var commandsMap: CommandsMap = mapOf()
+    private var commandsMap: CommandsMap = sortedMapOf()
     override val stackViewer: StackViewer
         get() = _stackViewer!!
     private var _stackViewer: StackViewer? = null
@@ -28,21 +29,20 @@ class StackMachineServiceImpl : StackMachineService {
 
     override fun emulateMachineUntil() {
         for (line in 0 until currentLine) {
-            val command = commandsMap[line] ?: throw StackEvaluationException("no command under line $line")
-            _stackMachine.execute(command)
+            commandsMap[line]?.executeOnStack()
         }
     }
 
     override fun emulateOneLine() {
-        val command = commandsMap[currentLine] ?: throw StackEvaluationException("no command under line $currentLine")
-        _stackMachine.execute(command)
-        moveCaretToNextLine()
+        commandsMap[currentLine]?.executeOnStack()
+
+        editor.moveCaretToNextLine()
     }
 
-    private fun moveCaretToNextLine() {
-        val caret = editor.caretModel.currentCaret
-        val currentPosition = caret.logicalPosition
-        caret.moveToLogicalPosition(LogicalPosition(currentPosition.line + 1, currentPosition.column))
+    private fun Insn.executeOnStack() = _stackMachine.execute(this)
+
+    private fun Editor.moveCaretToNextLine() {
+        caretModel.currentCaret.moveToLogicalPosition(LogicalPosition(currentLine + 1, 0))
     }
 
     override fun registerStackViewer(stackViewer: StackViewer) {
