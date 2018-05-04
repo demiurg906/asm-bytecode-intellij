@@ -13,10 +13,10 @@ interface StackMachineService {
         fun getInstance(project: Project): StackMachineService = ServiceManager.getService(project, StackMachineService::class.java)
     }
 
-    // проинициализировать
     fun initializeClass(map: CommandsMap)
+    fun resetStack()
 
-    fun emulateMachineUntil()
+    fun emulateToCursor()
     fun emulateOneLine()
 
     fun registerStackViewer(stackViewer: StackViewer)

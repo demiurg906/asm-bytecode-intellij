@@ -38,7 +38,8 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.PopupHandler
 import org.objectweb.asm.idea.actions.EmulateLineAction
-import org.objectweb.asm.idea.actions.StartNewStackAction
+import org.objectweb.asm.idea.actions.EmulateToCursorAction
+import org.objectweb.asm.idea.actions.ResetStackAction
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.ui.StackViewer
 import java.awt.BorderLayout
@@ -89,7 +90,7 @@ class BytecodeOutline @JvmOverloads constructor(
 
             override fun keyPressed(event: KeyEvent) {
                 when (event.keyCode) {
-                    KeyEvent.VK_F7 -> service.emulateMachineUntil()
+                    KeyEvent.VK_F7 -> service.emulateToCursor()
                     KeyEvent.VK_F8 -> service.emulateOneLine()
                 }
             }
@@ -106,14 +107,9 @@ class BytecodeOutline @JvmOverloads constructor(
         add(mainPanel)
 
         val group = DefaultActionGroup()
-
-        val runToCursorAction = StartNewStackAction()
-        // runToCursorAction.registerCustomShortcutSet(KeyEvent.VK_7, 0, editor.component)
-        group.add(runToCursorAction)
-
-        val nextLineAction = EmulateLineAction()
-        // nextLineAction.registerCustomShortcutSet(KeyEvent.VK_8, 0, editor.component)
-        group.add(nextLineAction)
+        group.add(EmulateToCursorAction())
+        group.add(EmulateLineAction())
+        group.add(ResetStackAction())
 
         val actionManager = ActionManager.getInstance()
         val actionToolBar = actionManager.createActionToolbar("ASM", group, true)
@@ -121,8 +117,6 @@ class BytecodeOutline @JvmOverloads constructor(
         buttonsPanel.add(actionToolBar.component, BorderLayout.CENTER)
         PopupHandler.installPopupHandler(editor.contentComponent, group, "ASM", actionManager)
         setToolbar(buttonsPanel)
-
-
     }
 
     fun setCode(file: VirtualFile?, code: String) {

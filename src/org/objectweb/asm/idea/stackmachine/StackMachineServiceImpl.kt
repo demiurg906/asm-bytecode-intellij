@@ -17,7 +17,10 @@ class StackMachineServiceImpl : StackMachineService {
         get() = _editor!!
     private var _editor: Editor? = null
 
-    private var currentLine: Int = 0
+    private val currentLine: Int
+        get() = editor.caretModel.currentCaret.logicalPosition.line
+
+    private var lastExecutedLine: Int = 0
 
     override fun initializeClass(map: CommandsMap) {
         stackMachine = StackMachine.getInstance()
@@ -25,18 +28,24 @@ class StackMachineServiceImpl : StackMachineService {
         stackViewer.stackMachine = stackMachine
     }
 
-    override fun emulateMachineUntil() {
-        val caretLine = editor.caretModel.currentCaret.logicalPosition.line
-        for (line in currentLine..caretLine) {
-            commandsMap[currentLine]?.executeOnStack()
+    override fun resetStack() {
+        stackMachine = StackMachine.getInstance()
+        stackViewer.stackMachine = stackMachine
+        lastExecutedLine = 0
+        visualizeStack()
+    }
+
+    override fun emulateToCursor() {
+        for (line in lastExecutedLine until currentLine) {
+            commandsMap[lastExecutedLine]?.executeOnStack()
         }
-        currentLine = caretLine
+        lastExecutedLine = currentLine - 1
     }
 
     override fun emulateOneLine() {
-        commandsMap[currentLine]?.executeOnStack()
+        lastExecutedLine = currentLine
+        commandsMap[currentLine]?.executeOnStack().run { visualizeStack() }
         moveCaretToNextLine()
-        visualizeStack()
     }
 
     private fun Insn.executeOnStack() = stackMachine.execute(this)
@@ -46,10 +55,7 @@ class StackMachineServiceImpl : StackMachineService {
     }
 
     private fun moveCaretToNextLine() {
-        val caret = editor.caretModel.currentCaret
-        val currentPosition = caret.logicalPosition
-        caret.moveToLogicalPosition(LogicalPosition(currentPosition.line + 1, 0))
-        currentLine = caret.logicalPosition.line
+        editor.caretModel.currentCaret.moveToLogicalPosition(LogicalPosition(currentLine + 1, 0))
     }
 
     override fun registerStackViewer(stackViewer: StackViewer) {
