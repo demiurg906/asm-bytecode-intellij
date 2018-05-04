@@ -36,7 +36,6 @@ import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
 import org.objectweb.asm.idea.config.ASMPluginComponent
 import org.objectweb.asm.idea.insns.Insn
-import org.objectweb.asm.idea.stackmachine.CommandsMap
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
 import org.objectweb.asm.idea.visitors.MethodTextifier
@@ -203,10 +202,10 @@ class ShowBytecodeOutlineAction : AnAction() {
 
             val (plainText, collectedInsns, lineNumbers) = getMethodsInfo(file, project)
             val service = StackMachineService.getInstance(project)
-//            service.initializeClass(commandsMap)
+            service.initializeClass((lineNumbers zip collectedInsns).toMap().toSortedMap())
 
             val bytecodeOutline = BytecodeOutline.getInstance(project)
-            val psiFile = PsiFileFactory.getInstance(project!!).createFileFromText("asm.java", "asmified")
+            val psiFile = PsiFileFactory.getInstance(project).createFileFromText("asm.java", "asmified")
             CodeStyleManager.getInstance(project).reformat(psiFile)
             bytecodeOutline.setCode(file, plainText)
             ToolWindowManager.getInstance(project).getToolWindow("ASM").activate(null)
@@ -217,7 +216,7 @@ class ShowBytecodeOutlineAction : AnAction() {
                           val lineNumbers: List<Int>)
 
     private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {
-        var reader: ClassReader? = null
+        var reader: ClassReader?
         try {
             file.refresh(false, false)
             reader = ClassReader(file.contentsToByteArray())
@@ -240,7 +239,7 @@ class ShowBytecodeOutlineAction : AnAction() {
 
         // internal visitor and printer
         val methodVisitor = visitor.methodVisitors[0]
-        val methodPrinter: MethodTextifier = visitor.printers[0]
+        val methodPrinter= visitor.printers[0]
 
         // get string representation
         val stringWriter = StringWriter()

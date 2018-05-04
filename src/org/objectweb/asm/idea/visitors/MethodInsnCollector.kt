@@ -42,6 +42,8 @@ class MethodInsnCollector(access: Int, name: String?,
                 collectedInstructions.add(IntConst(ICONST_5, 5))
             }
 
+
+
         // binary opcodes
             IADD, FADD,
             LADD, DADD -> {
@@ -76,6 +78,18 @@ class MethodInsnCollector(access: Int, name: String?,
                 collectedInstructions.add(LocalLoad(opcode, localIdx))
             }
 
+            ISTORE -> {
+                collectedInstructions.add(LocalStore(opcode, localIdx))
+            }
+
+        }
+    }
+
+    override fun visitIntInsn(opcode: Int, operand: Int) {
+        when (opcode) {
+            BIPUSH -> {
+                collectedInstructions.add(IntConst(opcode, operand))
+            }
         }
     }
 }
