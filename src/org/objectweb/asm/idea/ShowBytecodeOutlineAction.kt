@@ -239,7 +239,7 @@ class ShowBytecodeOutlineAction : AnAction() {
 
         // internal visitor and printer
         val methodVisitor = visitor.methodVisitors[0]
-        val methodPrinter: MethodTextifier = visitor.printers[0]
+        val methodPrinter= visitor.printers[0]
 
         // get string representation
         val stringWriter = StringWriter()
