@@ -5,11 +5,6 @@ import com.intellij.openapi.editor.LogicalPosition
 import org.objectweb.asm.idea.ui.StackViewer
 
 class StackMachineServiceImpl : StackMachineService {
-    override fun initializeClass(map: CommandsMap) {
-        stackMachine = StackMachine.getInstance()
-        commandsMap = map
-    }
-
     private var stackMachine: StackMachine = StackMachine.getInstance()
     private var commandsMap: CommandsMap = mapOf()
 
@@ -22,6 +17,12 @@ class StackMachineServiceImpl : StackMachineService {
     private var _editor: Editor? = null
 
     private var currentLine: Int = 0
+
+    override fun initializeClass(map: CommandsMap) {
+        stackMachine = StackMachine.getInstance()
+        commandsMap = map
+        stackViewer.stackMachine = stackMachine
+    }
 
     override fun emulateMachineUntil() {
         val caretLine = editor.caretModel.currentCaret.logicalPosition.line
@@ -40,7 +41,7 @@ class StackMachineServiceImpl : StackMachineService {
     }
 
     private fun visualizeStack() {
-        // TODO: implement
+        stackViewer.updateStackView()
     }
 
     private fun moveCaretToNextLine() {
