@@ -37,9 +37,10 @@ class StackMachineServiceImpl : StackMachineService {
 
     override fun emulateToCursor() {
         for (line in lastExecutedLine until currentLine) {
-            commandsMap[lastExecutedLine]?.executeOnStack()
+            commandsMap[line]?.executeOnStack()
         }
-        lastExecutedLine = currentLine - 1
+        lastExecutedLine = currentLine
+        visualizeStack()
     }
 
     override fun emulateOneLine() {
