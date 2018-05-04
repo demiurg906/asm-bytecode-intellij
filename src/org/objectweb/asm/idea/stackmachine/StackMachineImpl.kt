@@ -47,7 +47,7 @@ class StackMachineImpl : StackMachine {
     private fun storeVariable(index: Int): StackOperationResult {
         val value = _stack.pop()?.value
                 ?: throw IllegalArgumentException("No elements on stack to store in variable $index.")
-        _variables[index] = LocalVariable("var_$index", value)
+        _variables[index] = LocalVariable(index, "var_$index", value)
 
         return StackOperationResult(removed = 1, addedCells = emptyList())
     }

@@ -15,8 +15,6 @@ data class StackElement(val value: Int)
  */
 data class StackOperationResult(val removed: Int, val addedCells: List<StackElement>)
 
-data class LocalVariable(val name: String, var value: Int)
-
 interface StackMachine {
     companion object {
         fun getInstance(): StackMachine = StackMachineImpl()

@@ -6,9 +6,8 @@ import reloc.org.objectweb.asm.Opcodes
 import reloc.org.objectweb.asm.util.TraceMethodVisitor
 
 class ClassInsnCollector : ClassVisitor(Opcodes.ASM5), Opcodes {
-    var methodVisitors: MutableList<MethodInsnCollector> = mutableListOf()
-    var printers: MutableList<MethodTextifier> = mutableListOf()
-
+    val methodVisitors: MutableList<MethodInsnCollector> = mutableListOf()
+    val printers: MutableList<MethodTextifier> = mutableListOf()
 
     override fun visitMethod(access: Int, name: String?, desc: String?,
                              signature: String?, exceptions: Array<out String>?): MethodVisitor {
