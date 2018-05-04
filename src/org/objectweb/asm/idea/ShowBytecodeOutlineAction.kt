@@ -36,13 +36,11 @@ import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
 import org.objectweb.asm.idea.config.ASMPluginComponent
 import org.objectweb.asm.idea.insns.Insn
+import org.objectweb.asm.idea.stackmachine.LocalVariable
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
-import org.objectweb.asm.idea.visitors.MethodTextifier
 import reloc.org.objectweb.asm.ClassReader
 import java.io.IOException
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.util.concurrent.Semaphore
 
 
@@ -212,14 +210,23 @@ class ShowBytecodeOutlineAction : AnAction() {
         })
     }
 
-    data class MethodInfo(val plainText: String, val instructions: List<Insn>,
-                          val lineNumbers: List<Int>)
+    /**
+     * Class to hold information gathered from method's bytecode.
+     *
+     * [plainText] is a bytecode;
+     * [instructions] are instructions of method;
+     * [lineNumbers] are indexes corresponding to lines of every instruction;
+     * [localVariables] are list of variables visible from or initialized in method.
+     */
+    data class MethodInfo(val plainText: String,
+                          val instructions: List<Insn>,
+                          val lineNumbers: List<Int>,
+                          val localVariables: List<LocalVariable>)
 
     private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {
-        var reader: ClassReader?
-        try {
+        val reader = try {
             file.refresh(false, false)
-            reader = ClassReader(file.contentsToByteArray())
+            ClassReader(file.contentsToByteArray())
         } catch (e: IOException) {
             TODO("normal exception")
         }
@@ -238,22 +245,15 @@ class ShowBytecodeOutlineAction : AnAction() {
         reader.accept(visitor, flags)
 
         // internal visitor and printer
-        val methodVisitor = visitor.methodVisitors[0]
-        val methodPrinter= visitor.printers[0]
+        val methodIndex = 0
+        val methodVisitor = visitor.methodVisitors[methodIndex]
+        val methodPrinter = visitor.printers[methodIndex]
 
-        // get string representation
-        val stringWriter = StringWriter()
-        val printWriter = PrintWriter(stringWriter)
-        methodPrinter.print(printWriter)
-
-        // indexes corresponding to lines of every instruction
-        val lineNumbers = methodPrinter.lineNumbers
-
-        // instructions of method
-        val collectedInstructions = methodVisitor.collectedInstructions
-
-        return MethodInfo(stringWriter.toString(), collectedInstructions, lineNumbers)
+        return MethodInfo(
+                methodPrinter.collectedText,
+                methodVisitor.collectedInstructions,
+                methodPrinter.lineNumbers,
+                methodVisitor.localVariablesTyped)
     }
-
 
 }

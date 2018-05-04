@@ -1,6 +1,8 @@
 package org.objectweb.asm.idea.visitors
 
 import org.objectweb.asm.idea.insns.*
+import org.objectweb.asm.idea.stackmachine.LocalVariable
+import reloc.org.objectweb.asm.tree.LocalVariableNode
 import reloc.org.objectweb.asm.Opcodes
 import reloc.org.objectweb.asm.Opcodes.*
 import reloc.org.objectweb.asm.tree.MethodNode
@@ -10,6 +12,10 @@ class MethodInsnCollector(access: Int, name: String?,
                           exceptions: Array<out String>?) : MethodNode(ASM5, access, name, desc, signature, exceptions) {
 
     val collectedInstructions: MutableList<Insn> = mutableListOf()
+
+    @Suppress("UNCHECKED_CAST")
+    val localVariablesTyped
+        get() = (localVariables as List<LocalVariableNode>).map { LocalVariable(it.index, it.name, 0) }
 
     override fun visitInsn(opcode: Int) {
         when (opcode) {

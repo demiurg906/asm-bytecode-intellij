@@ -2,9 +2,20 @@ package org.objectweb.asm.idea.visitors
 
 import reloc.org.objectweb.asm.Opcodes.*
 import reloc.org.objectweb.asm.util.Textifier
+import java.io.PrintWriter
+import java.io.StringWriter
 
 class MethodTextifier : Textifier(ASM5) {
     val lineNumbers: MutableList<Int> = mutableListOf()
+
+    val collectedText
+        get(): String {
+            val stringWriter = StringWriter()
+
+            PrintWriter(stringWriter).use { print(it) }
+
+            return stringWriter.toString()
+        }
 
     override fun visitInsn(opcode: Int) {
         super.visitInsn(opcode)
