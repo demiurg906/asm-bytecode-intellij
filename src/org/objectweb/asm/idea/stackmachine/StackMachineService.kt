@@ -16,9 +16,6 @@ interface StackMachineService {
 
     // проинициализировать
     fun initializeClass(map: CommandsMap)
-    val stackMachine: StackMachine
-    val stackViewer: StackViewer
-    val currentLine: Int
 
     fun emulateMachineUntil()
     fun emulateOneLine()

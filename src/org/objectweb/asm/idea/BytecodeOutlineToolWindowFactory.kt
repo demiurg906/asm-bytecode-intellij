@@ -21,7 +21,6 @@ package org.objectweb.asm.idea
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentFactory
 
 /**
@@ -30,10 +29,6 @@ import com.intellij.ui.content.ContentFactory
 class BytecodeOutlineToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val outline = BytecodeOutline.getInstance(project)
-        //		BytecodeASMified asmified = BytecodeASMified.getInstance(project);
-        //        GroovifiedView groovified = GroovifiedView.getInstance(project);
         toolWindow.contentManager.addContent(ContentFactory.SERVICE.getInstance().createContent(outline, "Bytecode", false))
-        //		toolWindow.getContentManager().addContent(ContentFactory.SERVICE.getInstance().createContent(asmified, "ASMified", false));
-        //		toolWindow.getContentManager().addContent(ContentFactory.SERVICE.getInstance().createContent(groovified, "Groovified", false));
     }
 }
