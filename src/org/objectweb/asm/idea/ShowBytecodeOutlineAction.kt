@@ -38,7 +38,6 @@ import org.objectweb.asm.idea.config.ASMPluginComponent
 import org.objectweb.asm.idea.insns.Insn
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
-import org.objectweb.asm.idea.visitors.MethodTextifier
 import reloc.org.objectweb.asm.ClassReader
 import java.io.IOException
 import java.io.PrintWriter
@@ -238,8 +237,9 @@ class ShowBytecodeOutlineAction : AnAction() {
         reader.accept(visitor, flags)
 
         // internal visitor and printer
-        val methodVisitor = visitor.methodVisitors[0]
-        val methodPrinter= visitor.printers[0]
+        val index = 1
+        val methodVisitor = visitor.methodVisitors[index]
+        val methodPrinter= visitor.printers[index]
 
         // get string representation
         val stringWriter = StringWriter()
