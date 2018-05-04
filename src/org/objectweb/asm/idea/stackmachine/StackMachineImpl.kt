@@ -16,8 +16,8 @@ class StackMachineImpl : StackMachine {
         return when (insn) {
             is IntConst -> pushInt(insn.operand)
             is LocalLoad -> pushVariable(insn.index)
+            is LocalStore -> storeVariable(insn.index)
             is BinaryOperation -> executeBinaryOperation(insn.op)
-            else -> throw IllegalArgumentException("Unknown operation ${insn.opcode} ($insn).")
         }
     }
 
@@ -41,6 +41,14 @@ class StackMachineImpl : StackMachine {
     private fun pushInt(i: Int): StackOperationResult {
         _stack.add(StackElement(i))
         return StackOperationResult(removed = 0, addedCells = _stack.takeLast(1))
+    }
+
+    private fun storeVariable(index: Int): StackOperationResult {
+        val value = _stack.pop()?.value
+                ?: throw IllegalArgumentException("No elements on stack to store in variable $index.")
+        _variables[index] = LocalVariable("var_$index", value)
+
+        return StackOperationResult(removed = 1, addedCells = emptyList())
     }
 
     private fun pushVariable(index: Int): StackOperationResult {
