@@ -2,6 +2,7 @@ package org.objectweb.asm.idea.stackmachine
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
+import org.objectweb.asm.idea.insns.Insn
 import org.objectweb.asm.idea.ui.StackViewer
 
 class StackMachineServiceImpl : StackMachineService {
@@ -26,18 +27,18 @@ class StackMachineServiceImpl : StackMachineService {
     override fun emulateMachineUntil() {
         val caretLine = editor.caretModel.currentCaret.logicalPosition.line
         for (line in currentLine..caretLine) {
-            val command = commandsMap[line] ?: throw StackEvaluationException("no command under line $line")
-            stackMachine.execute(command)
+            commandsMap[currentLine]?.executeOnStack()
         }
         currentLine = caretLine
     }
 
     override fun emulateOneLine() {
-        val command = commandsMap[currentLine] ?: throw StackEvaluationException("no command under line $currentLine")
-        stackMachine.execute(command)
+        commandsMap[currentLine]?.executeOnStack()
         moveCaretToNextLine()
         visualizeStack()
     }
+
+    private fun Insn.executeOnStack() = stackMachine.execute(this)
 
     private fun visualizeStack() {
         // TODO: implement
