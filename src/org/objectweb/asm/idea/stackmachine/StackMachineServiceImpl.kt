@@ -43,8 +43,12 @@ class StackMachineServiceImpl : StackMachineService {
 
     override fun emulateOneLine() {
         lastExecutedLine = currentLine
-        commandsMap[currentLine]?.executeOnStack().run { visualizeStack() }
-        moveCaretToNextLine()
+        val operationResult: StackOperationResult? = commandsMap[currentLine]?.executeOnStack()
+        if (operationResult != null) {
+            visualizeStack()
+        }
+        val nextLine: Int? = operationResult?.nextLine
+        moveCaretToNextLine(nextLine)
     }
 
     private fun Instruction.executeOnStack() = stackMachine.execute(this)
@@ -53,8 +57,9 @@ class StackMachineServiceImpl : StackMachineService {
         stackViewer.updateStackView()
     }
 
-    private fun moveCaretToNextLine() {
-        editor.caretModel.currentCaret.moveToLogicalPosition(LogicalPosition(currentLine + 1, 0))
+    private fun moveCaretToNextLine(line: Int?) {
+        val nextLine = line ?: currentLine + 1
+        editor.caretModel.currentCaret.moveToLogicalPosition(LogicalPosition(nextLine, 0))
     }
 
     override fun registerBytecodeEditor(editor: Editor) {
