@@ -8,7 +8,7 @@ class StackMachineImpl(override val localVariables: LocalVariableTable, val labe
     override val stack: List<StackElement>
         get() = _stack.toList()
 
-    override fun execute(insn: Insn): StackOperationResult {
+    override fun execute(insn: Instruction): StackOperationResult {
 
         return when (insn) {
             is IntConst -> pushElement(IntValue(insn.operand))
@@ -21,13 +21,10 @@ class StackMachineImpl(override val localVariables: LocalVariableTable, val labe
 
             is BinaryOperation -> executeBinaryOperation(insn)
 
-            is IntConst -> pushInt(instruction.operand)
-            is LocalLoad -> pushVariable(instruction.index)
-            is LocalStore -> storeVariable(instruction.index)
-            is BinaryOperation -> executeBinaryOperation(instruction.op)
-            is IntCompareJump -> intJump(instruction.comparatorType, instruction.target)
-            is Goto -> gotoJump(instruction.target)
-            else -> TODO("$instruction is not handled yet.")
+            is IntCompareJump -> intJump(insn.comparatorType, insn.target)
+            is Goto -> gotoJump(insn.target)
+
+            else -> TODO("$insn is not handled yet.")
         }
     }
 
@@ -36,13 +33,13 @@ class StackMachineImpl(override val localVariables: LocalVariableTable, val labe
     }
 
     private fun intJump(cmp: ComparatorType, label: Label): StackOperationResult {
-        val right = (_stack.pop()?.value)
+        val right = (_stack.pop()?.value as? Int)
                 ?: throw IllegalArgumentException("No first argument for operation $cmp.")
-        val left = (_stack.pop()?.value)
+        val left = (_stack.pop()?.value as? Int)
                 ?: throw IllegalArgumentException("No second argument for operation $cmp.")
 
         var nextLine: Int? = null
-        var targetLine = labelMap[label]
+        val targetLine = labelMap[label]
         when (cmp) {
             ComparatorType.LESS -> {
                 if (left < right) {
@@ -120,9 +117,9 @@ class StackMachineImpl(override val localVariables: LocalVariableTable, val labe
         )
     }
 
-    private fun pushInt(i: Int): StackOperationResult {
-        _stack.add(StackElement(i))
-        return StackOperationResult(removed = 0, addedCells = _stack.takeLast(1))
+    private fun pushElement(element: StackElement): StackOperationResult {
+        _stack.add(element)
+        return StackOperationResult(removed = 0, addedCells = listOf(element))
     }
 
     private fun storeVariable(index: Int, type: PrimitiveType): StackOperationResult {

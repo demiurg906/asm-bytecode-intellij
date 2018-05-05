@@ -192,6 +192,15 @@ class MethodInsnCollector(access: Int, name: String?,
 
     }
 
+    override fun visitLdcInsn(operand: Any?) {
+        when (operand) {
+            is Int -> collectedInstructions.add(IntConst(operand))
+            is Double -> collectedInstructions.add(DoubleConst(operand))
+            is Float -> collectedInstructions.add(FloatConst(operand))
+            is Long -> collectedInstructions.add(LongConst(operand))
+        }
+    }
+
     private fun comparatorTypeFromOpcode(opcode: Int): ComparatorType {
         return when (opcode) {
             IF_ICMPEQ, IFEQ -> ComparatorType.EQUAL
@@ -212,13 +221,5 @@ class MethodInsnCollector(access: Int, name: String?,
         "I" -> PrimitiveType.INT
         "J" -> PrimitiveType.LONG
         else -> null
-    }
-
-    override fun visitLdcInsn(operand: Any?) {
-        when (operand) {
-            is Double -> collectedInstructions.add(DoubleConst(DCONST_0, operand))
-            is Float -> collectedInstructions.add(FloatConst(FCONST_0, operand))
-            is Long -> collectedInstructions.add(LongConst(LCONST_0, operand))
-        }
     }
 }
