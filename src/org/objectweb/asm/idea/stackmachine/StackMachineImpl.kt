@@ -2,15 +2,15 @@ package org.objectweb.asm.idea.stackmachine
 
 import org.objectweb.asm.idea.insns.*
 
-class StackMachineImpl : StackMachine {
+class StackMachineImpl(_localVariables: LocalVariableTable = LocalVariableTable(emptyList())) : StackMachine {
     private val _stack = mutableListOf<StackElement>()
-    private val _variables = mutableMapOf<Int, LocalVariable>()
+    private val _variables = _localVariables.variables.map { it.index to it }.toMap().toMutableMap()
+
+    override val localVariables: LocalVariableTable
+        get() = LocalVariableTable(_variables.values)
 
     override val stack: List<StackElement>
         get() = _stack.toList()
-
-    override val localVariables
-        get() = LocalVariableTable(_variables.values.toList())
 
     override fun execute(insn: Insn): StackOperationResult {
         return when (insn) {
