@@ -54,6 +54,11 @@ class StackMachineImpl(override val localVariables: LocalVariableTable) : StackM
 
         return pushInt(variable.value)
     }
+
+    override fun resetState() {
+        _stack.clear()
+        localVariables.resetState()
+    }
 }
 
 private fun <T> MutableList<T>.pop(): T? {

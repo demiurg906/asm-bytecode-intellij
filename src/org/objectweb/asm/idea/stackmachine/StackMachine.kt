@@ -23,4 +23,9 @@ interface StackMachine {
     val stack: List<StackElement>
     val localVariables: LocalVariableTable
     fun execute(insn: Insn): StackOperationResult
+
+    /**
+     * Resets all variables in stack's local variable table and clears stack.
+     */
+    fun resetState()
 }

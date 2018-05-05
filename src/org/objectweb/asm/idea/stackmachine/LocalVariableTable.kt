@@ -23,6 +23,10 @@ class LocalVariableTable(val variables: Collection<LocalVariable>) {
         variable.value = value
     }
 
+    fun resetState() {
+        variables.forEach { it.value = 0 }
+    }
+
     companion object {
         val emptyTable = LocalVariableTable(emptyList())
     }

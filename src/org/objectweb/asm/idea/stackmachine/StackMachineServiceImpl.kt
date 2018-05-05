@@ -28,8 +28,7 @@ class StackMachineServiceImpl : StackMachineService {
     }
 
     override fun resetStack() {
-        stackMachine = StackMachine.getInstance()
-        stackViewer.stackMachine = stackMachine
+        stackMachine.resetState()
         lastExecutedLine = 0
         visualizeStack()
     }
