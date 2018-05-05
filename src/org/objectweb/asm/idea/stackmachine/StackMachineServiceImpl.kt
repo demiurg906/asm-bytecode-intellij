@@ -26,6 +26,7 @@ class StackMachineServiceImpl : StackMachineService {
         stackMachine = StackMachine.getInstance(params.localVariables)
         commandsMap = params.commandsMap
         stackViewer.stackMachine = stackMachine
+        visualizeStack()
     }
 
     override fun resetStack() {
