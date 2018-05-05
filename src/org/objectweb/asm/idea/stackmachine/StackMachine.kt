@@ -21,7 +21,6 @@ interface StackMachine {
     }
 
     val stack: List<StackElement>
-    val variables: Map<Int, LocalVariable>
     val localVariables: LocalVariableTable
     fun execute(insn: Insn): StackOperationResult
 }

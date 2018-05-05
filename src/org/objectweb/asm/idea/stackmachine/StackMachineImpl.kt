@@ -9,11 +9,8 @@ class StackMachineImpl : StackMachine {
     override val stack: List<StackElement>
         get() = _stack.toList()
 
-    override val variables: Map<Int, LocalVariable>
-        get() = _variables.toMap()
-
     override val localVariables
-        get() = LocalVariableTable(variables.values.toList())
+        get() = LocalVariableTable(_variables.values.toList())
 
     override fun execute(insn: Insn): StackOperationResult {
         return when (insn) {
