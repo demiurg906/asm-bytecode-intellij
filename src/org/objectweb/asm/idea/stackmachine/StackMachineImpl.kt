@@ -2,7 +2,7 @@ package org.objectweb.asm.idea.stackmachine
 
 import org.objectweb.asm.idea.insns.*
 
-class StackMachineImpl(_localVariables: LocalVariableTable = LocalVariableTable(emptyList())) : StackMachine {
+class StackMachineImpl(_localVariables: LocalVariableTable) : StackMachine {
     private val _stack = mutableListOf<StackElement>()
     private val _variables = _localVariables.variables.map { it.index to it }.toMap().toMutableMap()
 
