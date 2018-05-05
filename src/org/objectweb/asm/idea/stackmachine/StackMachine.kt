@@ -2,8 +2,11 @@ package org.objectweb.asm.idea.stackmachine
 
 import org.objectweb.asm.idea.insns.Insn
 
-//sealed class StackElement
-data class StackElement(val value: Int)
+sealed class StackElement(open val value: Number)
+data class IntValue(override val value: Int): StackElement(value)
+data class LongValue(override val value: Long): StackElement(value)
+data class FloatValue(override val value: Float): StackElement(value)
+data class DoubleValue(override val value: Double): StackElement(value)
 //data class StackVariable(val name: String) : StackElement()
 
 /**

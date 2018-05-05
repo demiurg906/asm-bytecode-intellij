@@ -9,41 +9,68 @@ class StackMachineImpl(override val localVariables: LocalVariableTable) : StackM
         get() = _stack.toList()
 
     override fun execute(insn: Insn): StackOperationResult {
+
         return when (insn) {
-            is IntConst -> pushInt(insn.operand)
+            is IntConst -> pushElement(IntValue(insn.operand))
+            is LongConst -> pushElement(LongValue(insn.operand))
+            is FloatConst -> pushElement(FloatValue(insn.operand))
+            is DoubleConst -> pushElement(DoubleValue(insn.operand))
+
             is LocalLoad -> pushVariable(insn.index)
             is LocalStore -> storeVariable(insn.index)
-            is BinaryOperation -> executeBinaryOperation(insn.op)
+
+            is BinaryOperation -> executeBinaryOperation(insn)
+
             else -> TODO("$insn is not handled yet.")
         }
     }
 
-    private fun executeBinaryOperation(op: OperatorType): StackOperationResult {
-        val right = (_stack.pop()?.value) ?: throw IllegalArgumentException("No first argument for operation $op.")
-        val left = (_stack.pop()?.value) ?: throw IllegalArgumentException("No second argument for operation $op.")
+    private fun executeBinaryOperation(operation: BinaryOperation): StackOperationResult {
 
-        val result = when (op) {
-            OperatorType.ADD -> left + right
-            OperatorType.SUBTRACT -> left - right
-            OperatorType.MULTIPLY -> left * right
-            OperatorType.DIVIDE -> left / right
-            OperatorType.REMAINDER -> left % right
+        val element = when (operation.type) {
+            PrimitiveType.INT -> IntValue(performOperation(operation.op, IntOperations))
+            PrimitiveType.LONG -> LongValue(performOperation(operation.op, LongOperations))
+            PrimitiveType.FLOAT -> FloatValue(performOperation(operation.op, FloatOperations))
+            PrimitiveType.DOUBLE -> DoubleValue(performOperation(operation.op, DoubleOperations))
         }
 
-        pushInt(result)
+        _stack.add(element)
 
-        return StackOperationResult(removed = 2, addedCells = _stack.takeLast(1))
+        return StackOperationResult(removed = 2, addedCells = listOf(element))
     }
 
-    private fun pushInt(i: Int): StackOperationResult {
-        _stack.add(StackElement(i))
+    private inline fun <reified T : Number> performOperation(operation: OperatorType, operations: Operations<T>): T {
+        val right = extractNumber<T>()
+        val left = extractNumber<T>()
+
+        return when (operation) {
+            OperatorType.ADD -> operations.add(left, right)
+            OperatorType.SUBTRACT -> operations.subtract(left, right)
+            OperatorType.MULTIPLY -> operations.multiply(left, right)
+            OperatorType.DIVIDE -> operations.divide(left, right)
+            OperatorType.REMAINDER -> operations.reminder(left, right)
+        }
+    }
+
+    private inline fun <reified T : Number> extractNumber(): T {
+        if (_stack.last().value is T) {
+            return _stack.pop()!!.value as T
+        }
+
+        throw IllegalArgumentException(
+                "Cannot extractNumber ${T::class}; last element of stack has type ${_stack.last()::class}"
+        )
+    }
+
+    private fun pushElement(element: StackElement): StackOperationResult {
+        _stack.add(element)
         return StackOperationResult(removed = 0, addedCells = _stack.takeLast(1))
     }
 
     private fun storeVariable(index: Int): StackOperationResult {
         val value = _stack.pop()?.value
                 ?: throw IllegalArgumentException("No elements on stack to store in variable $index.")
-        localVariables.setVariableById(index, value)
+        localVariables.setVariableById(index, value as Int)
 
         return StackOperationResult(removed = 1, addedCells = emptyList())
     }
@@ -52,7 +79,7 @@ class StackMachineImpl(override val localVariables: LocalVariableTable) : StackM
         val variable = localVariables.findVariableById(index)
                 ?: throw IllegalArgumentException("No name for variable with index $index is found!")
 
-        return pushInt(variable.value)
+        return pushElement(IntValue(variable.value as Int))
     }
 
     override fun resetState() {
