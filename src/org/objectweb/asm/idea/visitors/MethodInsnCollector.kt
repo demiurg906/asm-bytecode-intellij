@@ -42,31 +42,57 @@ class MethodInsnCollector(access: Int, name: String?,
                 collectedInstructions.add(IntConst(ICONST_5, 5))
             }
 
+            DCONST_0 -> {
+                collectedInstructions.add(DoubleConst(DCONST_0, 0.0))
+            }
 
+            DCONST_1 -> {
+                collectedInstructions.add(DoubleConst(DCONST_1, 1.0))
+            }
+
+            LCONST_0 -> {
+                collectedInstructions.add(LongConst(LCONST_0, 0))
+            }
+
+            LCONST_1 -> {
+                collectedInstructions.add(LongConst(LCONST_1, 0))
+            }
+
+            FCONST_0 -> {
+                collectedInstructions.add(FloatConst(FCONST_0, 0f))
+            }
+
+            FCONST_1 -> {
+                collectedInstructions.add(FloatConst(FCONST_1, 1f))
+            }
+
+            FCONST_2 -> {
+                collectedInstructions.add(FloatConst(FCONST_2, 2f))
+            }
 
         // binary opcodes
             IADD, FADD,
             LADD, DADD -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.ADD))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.ADD, getType(opcode)))
             }
             ISUB, FSUB,
             LSUB, DSUB -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.SUBTRACT))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.SUBTRACT, getType(opcode)))
             }
 
             IMUL, FMUL,
             LMUL, DMUL -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.MULTIPLY))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.MULTIPLY, getType(opcode)))
             }
 
             IDIV, FDIV,
             LDIV, DDIV -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.DIVIDE))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.DIVIDE, getType(opcode)))
             }
 
             IREM, LREM,
             FREM, DREM -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.REMAINDER))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.REMAINDER, getType(opcode)))
             }
 
         }
@@ -75,11 +101,11 @@ class MethodInsnCollector(access: Int, name: String?,
     override fun visitVarInsn(opcode: Int, localIdx: Int) {
         when (opcode) {
             ILOAD -> {
-                collectedInstructions.add(LocalLoad(opcode, localIdx))
+                collectedInstructions.add(LocalLoad(opcode, localIdx, getType(opcode)))
             }
 
             ISTORE -> {
-                collectedInstructions.add(LocalStore(opcode, localIdx))
+                collectedInstructions.add(LocalStore(opcode, localIdx, getType(opcode)))
             }
 
         }
@@ -87,9 +113,32 @@ class MethodInsnCollector(access: Int, name: String?,
 
     override fun visitIntInsn(opcode: Int, operand: Int) {
         when (opcode) {
-            BIPUSH -> {
+            BIPUSH, SIPUSH -> {
                 collectedInstructions.add(IntConst(opcode, operand))
             }
         }
+    }
+
+
+    private fun getType(opcode: Int): PrimitiveType {
+        return when (opcode) {
+            IADD, ISUB, IMUL,
+            IDIV, IREM, ILOAD,
+            ISTORE -> PrimitiveType.INT
+
+            FADD, FSUB, FMUL,
+            FDIV, FREM, FLOAD,
+            FSTORE -> PrimitiveType.FLOAT
+
+            LADD, LSUB, LMUL,
+            LDIV, LREM, LLOAD,
+            LSTORE -> PrimitiveType.LONG
+
+            DADD, DSUB, DMUL,
+            DDIV, DREM, DLOAD,
+            DSTORE -> PrimitiveType.DOUBLE
+            else -> throw IllegalArgumentException("invalid opcode")
+        }
+
     }
 }

@@ -34,10 +34,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
+import com.intellij.psi.util.parents
 import org.objectweb.asm.idea.config.ASMPluginComponent
 import org.objectweb.asm.idea.insns.Insn
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
+import org.objectweb.asm.idea.visitors.MethodPsiInfo
 import reloc.org.objectweb.asm.ClassReader
 import java.io.IOException
 import java.io.PrintWriter
@@ -73,7 +75,12 @@ class ShowBytecodeOutlineAction : AnAction() {
             return
         }
 
-        val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+        val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
+        val offset = editor.caretModel.offset
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return
+
+        val methodPsiInfo = findMethodPsiInfo(psiFile, offset)
+
         if (psiFile is PsiClassOwner) {
             val module = ModuleUtil.findModuleForPsiElement(psiFile)
             val cme = CompilerModuleExtension.getInstance(module!!)
@@ -129,6 +136,26 @@ class ShowBytecodeOutlineAction : AnAction() {
                 }
             }
         }
+    }
+
+    private fun findMethodPsiInfo(psiFile: PsiFile, offset: Int): MethodPsiInfo {
+        val element = psiFile.findElementAt(offset) ?: TODO()
+        val parents = element.parents().toList()
+        var function: PsiMethod? = null
+        for (parent in parents) {
+            if (parent is PsiMethod) {
+                function = parent
+                break
+            }
+        }
+        if (function == null) {
+            TODO()
+        }
+        val functionName = function.name
+        val returnType = function.returnType?.canonicalText ?: TODO()
+        val parameterTypes = function.parameterList.parameters.map { it.type.canonicalText }
+
+        return MethodPsiInfo(functionName, returnType, parameterTypes)
     }
 
     private fun findClassFile(outputDirectories: Array<VirtualFile>?, psiFile: PsiFile?): VirtualFile {
@@ -237,9 +264,8 @@ class ShowBytecodeOutlineAction : AnAction() {
         reader.accept(visitor, flags)
 
         // internal visitor and printer
-        val index = 1
-        val methodVisitor = visitor.methodVisitors[index]
-        val methodPrinter= visitor.printers[index]
+        val methodVisitor = visitor.methodVisitors[0]
+        val methodPrinter= visitor.printers[0]
 
         // get string representation
         val stringWriter = StringWriter()
