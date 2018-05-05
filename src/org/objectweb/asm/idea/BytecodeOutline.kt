@@ -42,9 +42,9 @@ import org.objectweb.asm.idea.actions.EmulateToCursorAction
 import org.objectweb.asm.idea.actions.ResetStackAction
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import java.awt.BorderLayout
+import java.awt.GridLayout
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
-import javax.swing.BoxLayout
 import javax.swing.JPanel
 
 /**
@@ -77,7 +77,7 @@ class BytecodeOutline @JvmOverloads constructor(
 
     private fun setupUI() {
         val mainPanel = JPanel()
-        mainPanel.layout = BoxLayout(mainPanel, BoxLayout.Y_AXIS)
+        mainPanel.layout = GridLayout(2, 1)
 
         val editorComponent = editor.component
         mainPanel.add(editorComponent)

@@ -1,10 +1,10 @@
 package org.objectweb.asm.idea.stackmachine
 
 import org.objectweb.asm.idea.insns.*
+import reloc.org.objectweb.asm.Label
 
-class StackMachineImpl(override val localVariables: LocalVariableTable) : StackMachine {
+class StackMachineImpl(override val localVariables: LocalVariableTable, val labelMap: LabelMap) : StackMachine {
     private val _stack = mutableListOf<StackElement>()
-
     override val stack: List<StackElement>
         get() = _stack.toList()
 
@@ -21,8 +21,66 @@ class StackMachineImpl(override val localVariables: LocalVariableTable) : StackM
 
             is BinaryOperation -> executeBinaryOperation(insn)
 
-            else -> TODO("$insn is not handled yet.")
+            is IntConst -> pushInt(instruction.operand)
+            is LocalLoad -> pushVariable(instruction.index)
+            is LocalStore -> storeVariable(instruction.index)
+            is BinaryOperation -> executeBinaryOperation(instruction.op)
+            is IntCompareJump -> intJump(instruction.comparatorType, instruction.target)
+            is Goto -> gotoJump(instruction.target)
+            else -> TODO("$instruction is not handled yet.")
         }
+    }
+
+    private fun gotoJump(label: Label): StackOperationResult {
+        return StackOperationResult(removed = 0, addedCells = emptyList(), nextLine = labelMap[label])
+    }
+
+    private fun intJump(cmp: ComparatorType, label: Label): StackOperationResult {
+        val right = (_stack.pop()?.value)
+                ?: throw IllegalArgumentException("No first argument for operation $cmp.")
+        val left = (_stack.pop()?.value)
+                ?: throw IllegalArgumentException("No second argument for operation $cmp.")
+
+        var nextLine: Int? = null
+        var targetLine = labelMap[label]
+        when (cmp) {
+            ComparatorType.LESS -> {
+                if (left < right) {
+                    nextLine = targetLine
+                }
+            }
+            ComparatorType.LESS_EQUAL -> {
+                if (left <= right) {
+                    nextLine = targetLine
+                }
+            }
+
+            ComparatorType.GREATER -> {
+                if (left > right) {
+                    nextLine = targetLine
+                }
+            }
+
+            ComparatorType.GREATER_EQUAL -> {
+                if (left >= right) {
+                    nextLine = targetLine
+                }
+            }
+
+            ComparatorType.EQUAL -> {
+                if (left == right) {
+                    nextLine = targetLine
+                }
+            }
+
+            ComparatorType.NOT_EQUAL -> {
+                if (left != right) {
+                    nextLine = targetLine
+                }
+            }
+
+        }
+        return StackOperationResult(removed = 2, addedCells = emptyList(), nextLine = nextLine)
     }
 
     private fun executeBinaryOperation(operation: BinaryOperation): StackOperationResult {
@@ -62,8 +120,8 @@ class StackMachineImpl(override val localVariables: LocalVariableTable) : StackM
         )
     }
 
-    private fun pushElement(element: StackElement): StackOperationResult {
-        _stack.add(element)
+    private fun pushInt(i: Int): StackOperationResult {
+        _stack.add(StackElement(i))
         return StackOperationResult(removed = 0, addedCells = _stack.takeLast(1))
     }
 

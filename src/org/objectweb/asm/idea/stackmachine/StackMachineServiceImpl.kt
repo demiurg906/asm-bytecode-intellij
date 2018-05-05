@@ -2,7 +2,7 @@ package org.objectweb.asm.idea.stackmachine
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
-import org.objectweb.asm.idea.insns.Insn
+import org.objectweb.asm.idea.insns.Instruction
 import org.objectweb.asm.idea.ui.StackViewer
 
 class StackMachineServiceImpl : StackMachineService {
@@ -21,7 +21,7 @@ class StackMachineServiceImpl : StackMachineService {
     private var lastExecutedLine: Int = 0
 
     override fun initializeClass(params: StackParams) {
-        stackMachine = StackMachine.getInstance(params.localVariables)
+        stackMachine = StackMachine.getInstance(params.localVariables, params.labelToLineMap)
         commandsMap = params.commandsMap
         stackViewer.stackMachine = stackMachine
         visualizeStack()
@@ -43,18 +43,23 @@ class StackMachineServiceImpl : StackMachineService {
 
     override fun emulateOneLine() {
         lastExecutedLine = currentLine
-        commandsMap[currentLine]?.executeOnStack().run { visualizeStack() }
-        moveCaretToNextLine()
+        val operationResult: StackOperationResult? = commandsMap[currentLine]?.executeOnStack()
+        if (operationResult != null) {
+            visualizeStack()
+        }
+        val nextLine: Int? = operationResult?.nextLine
+        moveCaretToNextLine(nextLine)
     }
 
-    private fun Insn.executeOnStack() = stackMachine.execute(this)
+    private fun Instruction.executeOnStack() = stackMachine.execute(this)
 
     private fun visualizeStack() {
         stackViewer.updateStackView()
     }
 
-    private fun moveCaretToNextLine() {
-        editor.caretModel.currentCaret.moveToLogicalPosition(LogicalPosition(currentLine + 1, 0))
+    private fun moveCaretToNextLine(line: Int?) {
+        val nextLine = line ?: currentLine + 1
+        editor.caretModel.currentCaret.moveToLogicalPosition(LogicalPosition(nextLine, 0))
     }
 
     override fun registerBytecodeEditor(editor: Editor) {

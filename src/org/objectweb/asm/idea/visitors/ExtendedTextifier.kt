@@ -43,8 +43,6 @@ class MethodTextifier : Textifier(ASM5) {
         }
     }
 
-
-
     override fun visitIntInsn(opcode: Int, operand: Int) {
         super.visitIntInsn(opcode, operand)
 
@@ -52,6 +50,16 @@ class MethodTextifier : Textifier(ASM5) {
             BIPUSH -> {
                 lineNumbers.add(super.text.size - 1)
             }
+        }
+    }
+
+    override fun visitJumpInsn(opcode: Int, label: Label?) {
+        super.visitJumpInsn(opcode, label)
+        when(opcode) {
+            IF_ICMPEQ, IF_ICMPGE, IF_ICMPGT,
+            IF_ICMPLE, IF_ICMPLT, IF_ICMPNE, GOTO -> lineNumbers.add(super.text.size - 1)
+            /*IFNONNULL, IFNULL, IFEQ, IFGE, IFGT,
+            IFLE, IFLT, IFNE, GOTO*/
         }
     }
 
