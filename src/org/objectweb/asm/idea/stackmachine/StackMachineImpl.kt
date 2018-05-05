@@ -2,19 +2,19 @@ package org.objectweb.asm.idea.stackmachine
 
 import org.objectweb.asm.idea.insns.*
 
-class StackMachineImpl(override val localVariables: LocalVariableTable) : StackMachine {
+class StackMachineImpl : StackMachine {
     private val _stack = mutableListOf<StackElement>()
 
     override val stack: List<StackElement>
         get() = _stack.toList()
 
-    override fun execute(insn: Insn): StackOperationResult {
-        return when (insn) {
-            is IntConst -> pushInt(insn.operand)
-            is LocalLoad -> pushVariable(insn.index)
-            is LocalStore -> storeVariable(insn.index)
-            is BinaryOperation -> executeBinaryOperation(insn.op)
-            else -> TODO("$insn is not handled yet.")
+    override fun execute(instruction: Instruction): StackOperationResult {
+        return when (instruction) {
+            is IntConst -> pushInt(instruction.operand)
+            is LocalLoad -> pushVariable(instruction.index)
+            is LocalStore -> storeVariable(instruction.index)
+            is BinaryOperation -> executeBinaryOperation(instruction.op)
+            else -> TODO("$instruction is not handled yet.")
         }
     }
 

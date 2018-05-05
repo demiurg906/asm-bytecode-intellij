@@ -36,9 +36,7 @@ import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.util.parents
 import org.objectweb.asm.idea.config.ASMPluginComponent
-import org.objectweb.asm.idea.insns.Insn
-import org.objectweb.asm.idea.stackmachine.LocalVariable
-import org.objectweb.asm.idea.stackmachine.LocalVariableTable
+import org.objectweb.asm.idea.insns.Instruction
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.stackmachine.StackParams
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
@@ -254,7 +252,7 @@ class ShowBytecodeOutlineAction : AnAction() {
      * [localVariables] are list of variables visible from or initialized in method.
      */
     data class MethodInfo(val plainText: String,
-                          val instructions: List<Insn>,
+                          val instructions: List<Instruction>,
                           val lineNumbers: List<Int>,
                           val labelToLineNumberMap: Map<Label, Int>,
                           val localVariables: List<LocalVariable>)

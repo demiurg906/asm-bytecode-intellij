@@ -2,7 +2,7 @@ package org.objectweb.asm.idea.stackmachine
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
-import org.objectweb.asm.idea.insns.Insn
+import org.objectweb.asm.idea.insns.Instruction
 import org.objectweb.asm.idea.ui.StackViewer
 
 class StackMachineServiceImpl : StackMachineService {
@@ -47,7 +47,7 @@ class StackMachineServiceImpl : StackMachineService {
         moveCaretToNextLine()
     }
 
-    private fun Insn.executeOnStack() = stackMachine.execute(this)
+    private fun Instruction.executeOnStack() = stackMachine.execute(this)
 
     private fun visualizeStack() {
         stackViewer.updateStackView()

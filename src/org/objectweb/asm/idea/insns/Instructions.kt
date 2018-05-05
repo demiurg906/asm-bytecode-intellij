@@ -2,7 +2,7 @@ package org.objectweb.asm.idea.insns
 
 import reloc.org.objectweb.asm.Label
 
-sealed class Insn(open val opcode: Int)
+sealed class Instruction
 
 enum class OperatorType {
     ADD, SUBTRACT, REMAINDER,
@@ -13,15 +13,15 @@ enum class PrimitiveType {
     DOUBLE, INT, FLOAT, LONG;
 }
 
-data class BinaryOperation(override val opcode: Int, val op: OperatorType, val type: PrimitiveType) : Insn(opcode)
+data class BinaryOperation(val op: OperatorType, val type: PrimitiveType) : Instruction()
 
-data class LocalLoad(override val opcode: Int, val index: Int, val type: PrimitiveType) : Insn(opcode)
-data class LocalStore(override val opcode: Int, val index: Int, val type: PrimitiveType) : Insn(opcode)
+data class LocalLoad(val index: Int, val type: PrimitiveType) : Instruction()
+data class LocalStore(val index: Int, val type: PrimitiveType) : Instruction()
 
-data class IntConst(override val opcode: Int, val operand: Int) : Insn(opcode)
-data class DoubleConst(override val opcode: Int, val operand: Double) : Insn(opcode)
-data class LongConst(override val opcode: Int, val operand: Long) : Insn(opcode)
-data class FloatConst(override val opcode: Int, val operand: Float) : Insn(opcode)
+data class IntConst(val operand: Int) : Instruction()
+data class DoubleConst(val operand: Double) : Instruction()
+data class LongConst(val operand: Long) : Instruction()
+data class FloatConst(val operand: Float) : Instruction()
 
 
 enum class ComparatorType {
@@ -37,9 +37,8 @@ enum class ComparatorType {
  * DCMPL — compare two doubles
  * DCMPG — compare two doubles
  */
-data class CompareOperation(override val opcode: Int,
-                            val comparatorType: ComparatorType,
-                            val type: PrimitiveType) : Insn(opcode)
+data class CompareOperation(val comparatorType: ComparatorType,
+                            val type: PrimitiveType) : Instruction()
 
 
 // !! has reference to another command
@@ -49,9 +48,8 @@ data class CompareOperation(override val opcode: Int,
 // if_icmple
 // if_icmplt
 // if_icmpne
-data class IntCompareJump(override val opcode: Int,
-                          val comparatorType: ComparatorType,
-                          val target: Label) : Insn(opcode)
+data class IntCompareJump(val comparatorType: ComparatorType,
+                          val target: Label) : Instruction()
 
 // !! has reference to another command
 // ifeq
@@ -59,9 +57,8 @@ data class IntCompareJump(override val opcode: Int,
 // ifgt
 // ifle
 // iflt
-data class ZeroCompareJump(override val opcode: Int,
-                           val comparatorType: ComparatorType,
-                           val target: Label) : Insn(opcode)
+data class ZeroCompareJump(val comparatorType: ComparatorType,
+                           val target: Label) : Instruction()
 
 // !! has reference to another command
 // ifnonnull
@@ -70,11 +67,10 @@ data class ZeroCompareJump(override val opcode: Int,
  * [comparatorType] has value EQUAL if equals to null operation,
  * NOT_EQUAL otherwise
  */
-data class NullCompareJump(override val opcode: Int,
-                           val comparatorType: ComparatorType,
-                           val target: Label) : Insn(opcode)
+data class NullCompareJump(val comparatorType: ComparatorType,
+                           val target: Label) : Instruction()
 
-data class Goto(override val opcode: Int, val target: Label): Insn(opcode)
+data class Goto(val target: Label): Instruction()
 
 
 // TODO if_acmpne
