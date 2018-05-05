@@ -3,10 +3,10 @@ package org.objectweb.asm.idea.stackmachine
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import org.objectweb.asm.idea.insns.Insn
+import org.objectweb.asm.idea.insns.Instruction
 import org.objectweb.asm.idea.ui.StackViewer
 
-typealias CommandsMap = Map<Int, Insn>
+typealias CommandsMap = Map<Int, Instruction>
 
 interface StackMachineService {
     companion object {

@@ -36,7 +36,7 @@ import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.util.parents
 import org.objectweb.asm.idea.config.ASMPluginComponent
-import org.objectweb.asm.idea.insns.Insn
+import org.objectweb.asm.idea.insns.Instruction
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
 import org.objectweb.asm.idea.visitors.MethodPsiInfo
@@ -240,7 +240,7 @@ class ShowBytecodeOutlineAction : AnAction() {
         })
     }
 
-    data class MethodInfo(val plainText: String, val instructions: List<Insn>,
+    data class MethodInfo(val plainText: String, val instructions: List<Instruction>,
                           val lineNumbers: List<Int>, val labelToLineNumberMap: Map<Label, Int>)
 
     private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {

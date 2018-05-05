@@ -12,13 +12,13 @@ class StackMachineImpl : StackMachine {
     override val variables: Map<Int, LocalVariable>
         get() = _variables.toMap()
 
-    override fun execute(insn: Insn): StackOperationResult {
-        return when (insn) {
-            is IntConst -> pushInt(insn.operand)
-            is LocalLoad -> pushVariable(insn.index)
-            is LocalStore -> storeVariable(insn.index)
-            is BinaryOperation -> executeBinaryOperation(insn.op)
-            else -> TODO("$insn is not handled yet.")
+    override fun execute(instruction: Instruction): StackOperationResult {
+        return when (instruction) {
+            is IntConst -> pushInt(instruction.operand)
+            is LocalLoad -> pushVariable(instruction.index)
+            is LocalStore -> storeVariable(instruction.index)
+            is BinaryOperation -> executeBinaryOperation(instruction.op)
+            else -> TODO("$instruction is not handled yet.")
         }
     }
 
