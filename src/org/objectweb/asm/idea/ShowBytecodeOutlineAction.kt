@@ -37,7 +37,9 @@ import com.intellij.psi.codeStyle.CodeStyleManager
 import org.objectweb.asm.idea.config.ASMPluginComponent
 import org.objectweb.asm.idea.insns.Insn
 import org.objectweb.asm.idea.stackmachine.LocalVariable
+import org.objectweb.asm.idea.stackmachine.LocalVariableTable
 import org.objectweb.asm.idea.stackmachine.StackMachineService
+import org.objectweb.asm.idea.stackmachine.StackParams
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
 import reloc.org.objectweb.asm.ClassReader
 import java.io.IOException
@@ -198,9 +200,11 @@ class ShowBytecodeOutlineAction : AnAction() {
                 return@Runnable
             }
 
-            val (plainText, collectedInsns, lineNumbers) = getMethodsInfo(file, project)
+            val (plainText, collectedInsns, lineNumbers, localVariables) = getMethodsInfo(file, project)
+            val lineNumberToCommandMap = (lineNumbers zip collectedInsns).toMap().toSortedMap()
+
             val service = StackMachineService.getInstance(project)
-            service.initializeClass((lineNumbers zip collectedInsns).toMap().toSortedMap())
+            service.initializeClass(StackParams(lineNumberToCommandMap, LocalVariableTable(localVariables)))
 
             val bytecodeOutline = BytecodeOutline.getInstance(project)
             val psiFile = PsiFileFactory.getInstance(project).createFileFromText("asm.java", "asmified")

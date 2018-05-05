@@ -18,11 +18,7 @@ interface StackMachineService {
         fun getInstance(project: Project): StackMachineService = ServiceManager.getService(project, StackMachineService::class.java)
     }
 
-    // TODO remove this
-    fun initializeClass(map: CommandsMap)
-    fun initializeClass(params: StackParams) {
-        initializeClass(params.commandsMap)
-    }
+    fun initializeClass(params: StackParams)
     fun resetStack()
 
     fun emulateToCursor()

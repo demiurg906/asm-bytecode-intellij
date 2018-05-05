@@ -22,9 +22,9 @@ class StackMachineServiceImpl : StackMachineService {
 
     private var lastExecutedLine: Int = 0
 
-    override fun initializeClass(map: CommandsMap) {
+    override fun initializeClass(params: StackParams) {
         stackMachine = StackMachine.getInstance()
-        commandsMap = map
+        commandsMap = params.commandsMap
         stackViewer.stackMachine = stackMachine
     }
 
