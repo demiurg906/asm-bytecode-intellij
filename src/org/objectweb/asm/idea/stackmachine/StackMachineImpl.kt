@@ -16,8 +16,8 @@ class StackMachineImpl(override val localVariables: LocalVariableTable) : StackM
             is FloatConst -> pushElement(FloatValue(insn.operand))
             is DoubleConst -> pushElement(DoubleValue(insn.operand))
 
-            is LocalLoad -> pushVariable(insn.index)
-            is LocalStore -> storeVariable(insn.index)
+            is LocalLoad -> pushVariable(insn.index, insn.type)
+            is LocalStore -> storeVariable(insn.index, insn.type)
 
             is BinaryOperation -> executeBinaryOperation(insn)
 
@@ -67,19 +67,32 @@ class StackMachineImpl(override val localVariables: LocalVariableTable) : StackM
         return StackOperationResult(removed = 0, addedCells = _stack.takeLast(1))
     }
 
-    private fun storeVariable(index: Int): StackOperationResult {
+    private fun storeVariable(index: Int, type: PrimitiveType): StackOperationResult {
         val value = _stack.pop()?.value
                 ?: throw IllegalArgumentException("No elements on stack to store in variable $index.")
-        localVariables.setVariableById(index, value as Int)
+
+        when (type) {
+            PrimitiveType.INT -> localVariables.setVariableById(index, value as Int)
+            PrimitiveType.LONG -> localVariables.setVariableById(index, value as Long)
+            PrimitiveType.FLOAT -> localVariables.setVariableById(index, value as Float)
+            PrimitiveType.DOUBLE -> localVariables.setVariableById(index, value as Double)
+        }
 
         return StackOperationResult(removed = 1, addedCells = emptyList())
     }
 
-    private fun pushVariable(index: Int): StackOperationResult {
+    private fun pushVariable(index: Int, type: PrimitiveType): StackOperationResult {
         val variable = localVariables.findVariableById(index)
                 ?: throw IllegalArgumentException("No name for variable with index $index is found!")
 
-        return pushElement(IntValue(variable.value as Int))
+        val element = when (type) {
+            PrimitiveType.INT -> IntValue(variable.value as Int)
+            PrimitiveType.LONG -> LongValue(variable.value as Long)
+            PrimitiveType.FLOAT -> FloatValue(variable.value as Float)
+            PrimitiveType.DOUBLE -> DoubleValue(variable.value as Double)
+        }
+
+        return pushElement(element)
     }
 
     override fun resetState() {

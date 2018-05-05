@@ -1,7 +1,7 @@
 package org.objectweb.asm.idea.visitors
 
 import org.objectweb.asm.idea.insns.*
-import org.objectweb.asm.idea.stackmachine.LocalVariable
+import org.objectweb.asm.idea.stackmachine.*
 import reloc.org.objectweb.asm.Label
 import reloc.org.objectweb.asm.Opcodes
 import reloc.org.objectweb.asm.Opcodes.*
@@ -15,8 +15,16 @@ class MethodInsnCollector(access: Int, name: String?,
     val collectedInstructions: MutableList<Insn> = mutableListOf()
 
     @Suppress("UNCHECKED_CAST")
-    val localVariablesTyped
-        get() = (localVariables as List<LocalVariableNode>).map { LocalVariable(it.index, it.name, 0) }
+    val localVariablesTyped: List<LocalVariable>
+        get() = (localVariables as List<LocalVariableNode>).mapNotNull {
+            when (it.desc.toType()) {
+                PrimitiveType.DOUBLE -> DoubleVariable(it.index, it.name)
+                PrimitiveType.INT -> IntVariable(it.index, it.name)
+                PrimitiveType.FLOAT -> FloatVariable(it.index, it.name)
+                PrimitiveType.LONG -> LongVariable(it.index, it.name)
+                else -> null
+            }
+        }
 
     override fun visitInsn(opcode: Int) {
         when (opcode) {
@@ -113,14 +121,13 @@ class MethodInsnCollector(access: Int, name: String?,
 
     override fun visitVarInsn(opcode: Int, localIdx: Int) {
         when (opcode) {
-            ILOAD -> {
+            ILOAD, FLOAD, DLOAD, LLOAD -> {
                 collectedInstructions.add(LocalLoad(opcode, localIdx, primitiveTypeFromOpcode(opcode)))
             }
 
-            ISTORE -> {
+            ISTORE, FSTORE, DSTORE, LSTORE -> {
                 collectedInstructions.add(LocalStore(opcode, localIdx, primitiveTypeFromOpcode(opcode)))
             }
-
         }
         super.visitVarInsn(opcode, localIdx)
     }
@@ -194,6 +201,14 @@ class MethodInsnCollector(access: Int, name: String?,
             else -> throw IllegalArgumentException("invalid opcode")
         }
 
+    }
+
+    private fun String.toType() = when (this) {
+        "D" -> PrimitiveType.DOUBLE
+        "F" -> PrimitiveType.FLOAT
+        "I" -> PrimitiveType.INT
+        "J" -> PrimitiveType.LONG
+        else -> null
     }
 
     override fun visitLdcInsn(operand: Any?) {
