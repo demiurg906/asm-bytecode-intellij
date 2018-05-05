@@ -46,6 +46,8 @@ import org.objectweb.asm.idea.visitors.MethodPsiInfo
 import reloc.org.objectweb.asm.ClassReader
 import reloc.org.objectweb.asm.Label
 import java.io.IOException
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.util.concurrent.Semaphore
 
 
@@ -228,10 +230,11 @@ class ShowBytecodeOutlineAction : AnAction() {
                 return@Runnable
             }
 
-            val (plainText, collectedInsns,
-                    lineNumbers, labelToLineMap) = getMethodsInfo(file, project)
+            val (plainText, collectedInsns, lineNumbers, labelToLineMap, localVariables) = getMethodsInfo(file, project)
+            val lineToCommandMap = (lineNumbers zip collectedInsns).toMap().toSortedMap()
+
             val service = StackMachineService.getInstance(project)
-            service.initializeClass((lineNumbers zip collectedInsns).toMap().toSortedMap())
+            service.initializeClass(StackParams(lineToCommandMap, LocalVariableTable(localVariables)))
 
             val bytecodeOutline = BytecodeOutline.getInstance(project)
             val psiFile = PsiFileFactory.getInstance(project).createFileFromText("asm.java", "asmified")
@@ -241,8 +244,19 @@ class ShowBytecodeOutlineAction : AnAction() {
         })
     }
 
-    data class MethodInfo(val plainText: String, val instructions: List<Insn>,
-                          val lineNumbers: List<Int>, val labelToLineNumberMap: Map<Label, Int>)
+    /**
+     * Class to hold information gathered from method's bytecode.
+     *
+     * [plainText] is a bytecode;
+     * [instructions] are instructions of method;
+     * [lineNumbers] are indexes corresponding to lines of every instruction;
+     * [localVariables] are list of variables visible from or initialized in method.
+     */
+    data class MethodInfo(val plainText: String,
+                          val instructions: List<Insn>,
+                          val lineNumbers: List<Int>,
+                          val labelToLineNumberMap: Map<Label, Int>,
+                          val localVariables: List<LocalVariable>)
 
     private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {
         var reader: ClassReader?
@@ -268,21 +282,23 @@ class ShowBytecodeOutlineAction : AnAction() {
 
         // internal visitor and printer
         val methodVisitor = visitor.methodVisitors[0]
-        val methodPrinter= visitor.printers[0]
-
-        // get string representation
-        val stringWriter = StringWriter()
-        val printWriter = PrintWriter(stringWriter)
-        methodPrinter.print(printWriter)
+        val methodPrinter = visitor.printers[0]
 
         // indexes corresponding to lines of every instruction
         val lineNumbers = methodPrinter.lineNumbers
         val labelToLineMap = methodPrinter.labelToLineNumber
+        val localVariables = methodVisitor.localVariablesTyped
 
         // instructions of method
         val collectedInstructions = methodVisitor.collectedInstructions
 
-        return MethodInfo(stringWriter.toString(), collectedInstructions, lineNumbers, labelToLineMap)
+        return MethodInfo(
+                methodPrinter.collectedText,
+                collectedInstructions,
+                lineNumbers,
+                labelToLineMap,
+                localVariables
+        )
     }
 
 
