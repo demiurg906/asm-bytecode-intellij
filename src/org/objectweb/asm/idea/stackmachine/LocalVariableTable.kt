@@ -7,7 +7,7 @@ data class LocalVariable(val index: Int, val name: String, var value: Int)
  *
  * It is supposed that list of variables cannot be changed.
  */
-class LocalVariableTable(val variables: List<LocalVariable>) {
+class LocalVariableTable(val variables: Collection<LocalVariable>) {
 
     fun findVariableByName(name: String): LocalVariable? = variables.find { it.name == name }
 

@@ -12,6 +12,9 @@ class StackMachineImpl : StackMachine {
     override val variables: Map<Int, LocalVariable>
         get() = _variables.toMap()
 
+    override val localVariables
+        get() = LocalVariableTable(variables.values.toList())
+
     override fun execute(insn: Insn): StackOperationResult {
         return when (insn) {
             is IntConst -> pushInt(insn.operand)
