@@ -51,6 +51,15 @@ class MethodTextifier : Textifier(ASM5) {
         }
     }
 
+    override fun visitJumpInsn(opcode: Int, label: Label?) {
+        when(opcode) {
+            IF_ICMPEQ, IF_ICMPGE, IF_ICMPGT,
+            IF_ICMPLE, IF_ICMPLT, IF_ICMPNE -> lineNumbers.add(super.text.size - 1)
+            /*IFNONNULL, IFNULL, IFEQ, IFGE, IFGT,
+            IFLE, IFLT, IFNE, GOTO*/
+        }
+    }
+
     override fun visitLabel(label: Label) {
         super.visitLabel(label)
         labelToLineNumber[label] = super.text.size
