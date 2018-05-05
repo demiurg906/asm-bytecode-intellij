@@ -9,9 +9,7 @@ class StackMachineServiceImpl : StackMachineService {
     private var stackMachine: StackMachine = StackMachine.getInstance()
     private var commandsMap: CommandsMap = mapOf()
 
-    private val stackViewer: StackViewer
-        get() = _stackViewer!!
-    private var _stackViewer: StackViewer? = null
+    override val stackViewer: StackViewer = StackViewer()
 
     private val editor: Editor
         get() = _editor!!
@@ -57,10 +55,6 @@ class StackMachineServiceImpl : StackMachineService {
 
     private fun moveCaretToNextLine() {
         editor.caretModel.currentCaret.moveToLogicalPosition(LogicalPosition(currentLine + 1, 0))
-    }
-
-    override fun registerStackViewer(stackViewer: StackViewer) {
-        this._stackViewer = stackViewer
     }
 
     override fun registerBytecodeEditor(editor: Editor) {
