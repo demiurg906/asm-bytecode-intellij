@@ -34,6 +34,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
+import com.intellij.psi.util.parents
 import org.objectweb.asm.idea.config.ASMPluginComponent
 import org.objectweb.asm.idea.insns.Insn
 import org.objectweb.asm.idea.stackmachine.LocalVariable
@@ -41,7 +42,9 @@ import org.objectweb.asm.idea.stackmachine.LocalVariableTable
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.stackmachine.StackParams
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
+import org.objectweb.asm.idea.visitors.MethodPsiInfo
 import reloc.org.objectweb.asm.ClassReader
+import reloc.org.objectweb.asm.Label
 import java.io.IOException
 import java.util.concurrent.Semaphore
 
@@ -74,7 +77,12 @@ class ShowBytecodeOutlineAction : AnAction() {
             return
         }
 
-        val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+        val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
+        val offset = editor.caretModel.offset
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return
+
+        val methodPsiInfo = findMethodPsiInfo(psiFile, offset)
+
         if (psiFile is PsiClassOwner) {
             val module = ModuleUtil.findModuleForPsiElement(psiFile)
             val cme = CompilerModuleExtension.getInstance(module!!)
@@ -130,6 +138,26 @@ class ShowBytecodeOutlineAction : AnAction() {
                 }
             }
         }
+    }
+
+    private fun findMethodPsiInfo(psiFile: PsiFile, offset: Int): MethodPsiInfo {
+        val element = psiFile.findElementAt(offset) ?: TODO()
+        val parents = element.parents().toList()
+        var function: PsiMethod? = null
+        for (parent in parents) {
+            if (parent is PsiMethod) {
+                function = parent
+                break
+            }
+        }
+        if (function == null) {
+            TODO()
+        }
+        val functionName = function.name
+        val returnType = function.returnType?.canonicalText ?: TODO()
+        val parameterTypes = function.parameterList.parameters.map { it.type.canonicalText }
+
+        return MethodPsiInfo(functionName, returnType, parameterTypes)
     }
 
     private fun findClassFile(outputDirectories: Array<VirtualFile>?, psiFile: PsiFile?): VirtualFile {
@@ -200,11 +228,10 @@ class ShowBytecodeOutlineAction : AnAction() {
                 return@Runnable
             }
 
-            val (plainText, collectedInsns, lineNumbers, localVariables) = getMethodsInfo(file, project)
-            val lineNumberToCommandMap = (lineNumbers zip collectedInsns).toMap().toSortedMap()
-
+            val (plainText, collectedInsns,
+                    lineNumbers, labelToLineMap) = getMethodsInfo(file, project)
             val service = StackMachineService.getInstance(project)
-            service.initializeClass(StackParams(lineNumberToCommandMap, LocalVariableTable(localVariables)))
+            service.initializeClass((lineNumbers zip collectedInsns).toMap().toSortedMap())
 
             val bytecodeOutline = BytecodeOutline.getInstance(project)
             val psiFile = PsiFileFactory.getInstance(project).createFileFromText("asm.java", "asmified")
@@ -214,23 +241,14 @@ class ShowBytecodeOutlineAction : AnAction() {
         })
     }
 
-    /**
-     * Class to hold information gathered from method's bytecode.
-     *
-     * [plainText] is a bytecode;
-     * [instructions] are instructions of method;
-     * [lineNumbers] are indexes corresponding to lines of every instruction;
-     * [localVariables] are list of variables visible from or initialized in method.
-     */
-    data class MethodInfo(val plainText: String,
-                          val instructions: List<Insn>,
-                          val lineNumbers: List<Int>,
-                          val localVariables: List<LocalVariable>)
+    data class MethodInfo(val plainText: String, val instructions: List<Insn>,
+                          val lineNumbers: List<Int>, val labelToLineNumberMap: Map<Label, Int>)
 
     private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {
-        val reader = try {
+        var reader: ClassReader?
+        try {
             file.refresh(false, false)
-            ClassReader(file.contentsToByteArray())
+            reader = ClassReader(file.contentsToByteArray())
         } catch (e: IOException) {
             TODO("normal exception")
         }
@@ -249,15 +267,23 @@ class ShowBytecodeOutlineAction : AnAction() {
         reader.accept(visitor, flags)
 
         // internal visitor and printer
-        val methodIndex = 0
-        val methodVisitor = visitor.methodVisitors[methodIndex]
-        val methodPrinter = visitor.printers[methodIndex]
+        val methodVisitor = visitor.methodVisitors[0]
+        val methodPrinter= visitor.printers[0]
 
-        return MethodInfo(
-                methodPrinter.collectedText,
-                methodVisitor.collectedInstructions,
-                methodPrinter.lineNumbers,
-                methodVisitor.localVariablesTyped)
+        // get string representation
+        val stringWriter = StringWriter()
+        val printWriter = PrintWriter(stringWriter)
+        methodPrinter.print(printWriter)
+
+        // indexes corresponding to lines of every instruction
+        val lineNumbers = methodPrinter.lineNumbers
+        val labelToLineMap = methodPrinter.labelToLineNumber
+
+        // instructions of method
+        val collectedInstructions = methodVisitor.collectedInstructions
+
+        return MethodInfo(stringWriter.toString(), collectedInstructions, lineNumbers, labelToLineMap)
     }
+
 
 }

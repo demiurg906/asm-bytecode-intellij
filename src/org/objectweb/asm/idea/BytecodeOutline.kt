@@ -41,7 +41,6 @@ import org.objectweb.asm.idea.actions.EmulateLineAction
 import org.objectweb.asm.idea.actions.EmulateToCursorAction
 import org.objectweb.asm.idea.actions.ResetStackAction
 import org.objectweb.asm.idea.stackmachine.StackMachineService
-import org.objectweb.asm.idea.ui.StackViewer
 import java.awt.BorderLayout
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -98,11 +97,9 @@ class BytecodeOutline @JvmOverloads constructor(
             override fun keyReleased(event: KeyEvent) {}
         })
 
-        val stackViewer = StackViewer()
         val service = StackMachineService.getInstance(project)
-        service.registerStackViewer(stackViewer)
         service.registerBytecodeEditor(editor)
-        mainPanel.add(stackViewer.component)
+        mainPanel.add(service.stackViewer.component)
 
         add(mainPanel)
 

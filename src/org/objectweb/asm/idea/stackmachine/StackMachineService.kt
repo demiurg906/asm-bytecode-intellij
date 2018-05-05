@@ -18,12 +18,13 @@ interface StackMachineService {
         fun getInstance(project: Project): StackMachineService = ServiceManager.getService(project, StackMachineService::class.java)
     }
 
+    val stackViewer: StackViewer
+
     fun initializeClass(params: StackParams)
     fun resetStack()
 
     fun emulateToCursor()
     fun emulateOneLine()
 
-    fun registerStackViewer(stackViewer: StackViewer)
     fun registerBytecodeEditor(editor: Editor)
 }
