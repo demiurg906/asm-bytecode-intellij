@@ -13,11 +13,11 @@ data class StackElement(val value: Int)
  *
  * [addedCells] are new stack cells (for example, result of for `multiply`); last element in this list is head in stack.
  */
-data class StackOperationResult(val removed: Int, val addedCells: List<StackElement>)
+data class StackOperationResult(val removed: Int, val addedCells: List<StackElement>, val nextLine: Int? = null)
 
 interface StackMachine {
     companion object {
-        fun getInstance(localVariables: LocalVariableTable = LocalVariableTable.emptyTable) = StackMachineImpl(localVariables)
+        fun getInstance(localVariables: LocalVariableTable = LocalVariableTable.emptyTable, labelMap: LabelMap = emptyMap()) = StackMachineImpl(localVariables, labelMap)
     }
 
     val stack: List<StackElement>

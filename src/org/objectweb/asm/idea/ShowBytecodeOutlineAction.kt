@@ -236,7 +236,7 @@ class ShowBytecodeOutlineAction : AnAction() {
             val lineToCommandMap = (lineNumbers zip collectedInsns).toMap().toSortedMap()
 
             val service = StackMachineService.getInstance(project)
-            service.initializeClass(StackParams(lineToCommandMap, LocalVariableTable(localVariables)))
+            service.initializeClass(StackParams(lineToCommandMap, LocalVariableTable(localVariables), labelToLineMap))
 
             val bytecodeOutline = BytecodeOutline.getInstance(project)
             val psiFile = PsiFileFactory.getInstance(project).createFileFromText("asm.java", "asmified")

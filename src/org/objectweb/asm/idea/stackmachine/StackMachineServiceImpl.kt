@@ -21,7 +21,7 @@ class StackMachineServiceImpl : StackMachineService {
     private var lastExecutedLine: Int = 0
 
     override fun initializeClass(params: StackParams) {
-        stackMachine = StackMachine.getInstance(params.localVariables)
+        stackMachine = StackMachine.getInstance(params.localVariables, params.labelToLineMap)
         commandsMap = params.commandsMap
         stackViewer.stackMachine = stackMachine
         visualizeStack()
