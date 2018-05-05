@@ -2,9 +2,8 @@ package org.objectweb.asm.idea.stackmachine
 
 import org.objectweb.asm.idea.insns.*
 
-class StackMachineImpl : StackMachine {
+class StackMachineImpl(override val localVariables: LocalVariableTable) : StackMachine {
     private val _stack = mutableListOf<StackElement>()
-
     override val stack: List<StackElement>
         get() = _stack.toList()
 
@@ -17,6 +16,8 @@ class StackMachineImpl : StackMachine {
             else -> TODO("$instruction is not handled yet.")
         }
     }
+
+
 
     private fun executeBinaryOperation(op: OperatorType): StackOperationResult {
         val right = (_stack.pop()?.value) ?: throw IllegalArgumentException("No first argument for operation $op.")

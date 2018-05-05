@@ -1,9 +1,11 @@
 package org.objectweb.asm.idea.visitors
 
 import org.objectweb.asm.idea.insns.*
+import org.objectweb.asm.idea.stackmachine.LocalVariable
 import reloc.org.objectweb.asm.Label
 import reloc.org.objectweb.asm.Opcodes
 import reloc.org.objectweb.asm.Opcodes.*
+import reloc.org.objectweb.asm.tree.LocalVariableNode
 import reloc.org.objectweb.asm.tree.MethodNode
 
 class MethodInsnCollector(access: Int, name: String?,
@@ -102,7 +104,7 @@ class MethodInsnCollector(access: Int, name: String?,
 
             LCMP, FCMPL, FCMPG,
             DCMPL, DCMPG -> {
-                collectedInstructions.add(CompareOperation(opcode, comparatorTypeFromOpcode(opcode), primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(CompareOperation(comparatorTypeFromOpcode(opcode), primitiveTypeFromOpcode(opcode)))
             }
 
         }

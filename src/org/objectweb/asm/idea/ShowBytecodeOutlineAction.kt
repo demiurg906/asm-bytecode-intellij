@@ -37,6 +37,8 @@ import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.util.parents
 import org.objectweb.asm.idea.config.ASMPluginComponent
 import org.objectweb.asm.idea.insns.Instruction
+import org.objectweb.asm.idea.stackmachine.LocalVariable
+import org.objectweb.asm.idea.stackmachine.LocalVariableTable
 import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.stackmachine.StackParams
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
