@@ -36,6 +36,10 @@ import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.util.parents
 import org.objectweb.asm.idea.config.ASMPluginComponent
+import org.objectweb.asm.idea.insns.Insn
+import org.objectweb.asm.idea.stackmachine.OutOfMethodException
+import org.objectweb.asm.idea.stackmachine.StackMachineService
+import org.objectweb.asm.idea.ui.ASMPopupService
 import org.objectweb.asm.idea.insns.Instruction
 import org.objectweb.asm.idea.stackmachine.LocalVariable
 import org.objectweb.asm.idea.stackmachine.LocalVariableTable
@@ -79,10 +83,14 @@ class ShowBytecodeOutlineAction : AnAction() {
 
         val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
         val offset = editor.caretModel.offset
-        val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
-                ?: return
-
-        val methodPsiInfo = findMethodPsiInfo(psiFile, offset)
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return
+        val methodPsiInfo: MethodPsiInfo
+        try {
+             methodPsiInfo = findMethodPsiInfo(psiFile, offset)
+        } catch (e: OutOfMethodException) {
+            ASMPopupService.getInstance(project).showOutOfMethodPopup()
+            return
+        }
 
         if (psiFile is PsiClassOwner) {
             val module = ModuleUtil.findModuleForPsiElement(psiFile)
@@ -142,7 +150,7 @@ class ShowBytecodeOutlineAction : AnAction() {
     }
 
     private fun findMethodPsiInfo(psiFile: PsiFile, offset: Int): MethodPsiInfo {
-        val element = psiFile.findElementAt(offset) ?: TODO()
+        val element = psiFile.findElementAt(offset) ?: throw OutOfMethodException()
         val parents = element.parents().toList()
         var function: PsiMethod? = null
         for (parent in parents) {
@@ -152,10 +160,10 @@ class ShowBytecodeOutlineAction : AnAction() {
             }
         }
         if (function == null) {
-            TODO()
+            throw OutOfMethodException()
         }
         val functionName = function.name
-        val returnType = function.returnType?.canonicalText ?: TODO()
+        val returnType = function.returnType?.canonicalText ?: throw OutOfMethodException()
         val parameterTypes = function.parameterList.parameters.map { it.type.canonicalText }
 
         return MethodPsiInfo(functionName, returnType, parameterTypes)
