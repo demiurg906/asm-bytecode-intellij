@@ -1,18 +1,18 @@
 package org.objectweb.asm.idea.visitors
 
 import org.objectweb.asm.idea.insns.*
-import reloc.org.objectweb.asm.Label
 import org.objectweb.asm.idea.stackmachine.LocalVariable
-import reloc.org.objectweb.asm.tree.LocalVariableNode
+import reloc.org.objectweb.asm.Label
 import reloc.org.objectweb.asm.Opcodes
 import reloc.org.objectweb.asm.Opcodes.*
+import reloc.org.objectweb.asm.tree.LocalVariableNode
 import reloc.org.objectweb.asm.tree.MethodNode
 
 class MethodInsnCollector(access: Int, name: String?,
                           desc: String?, signature: String?,
                           exceptions: Array<out String>?) : MethodNode(ASM5, access, name, desc, signature, exceptions) {
 
-    val collectedInstructions: MutableList<Insn> = mutableListOf()
+    val collectedInstructions: MutableList<Instruction> = mutableListOf()
 
     @Suppress("UNCHECKED_CAST")
     val localVariablesTyped
@@ -22,89 +22,89 @@ class MethodInsnCollector(access: Int, name: String?,
         when (opcode) {
         // constants
             ICONST_M1 -> {
-                collectedInstructions.add(IntConst(Opcodes.ICONST_M1, -1))
+                collectedInstructions.add(IntConst(-1))
             }
 
             ICONST_0 -> {
-                collectedInstructions.add(IntConst(Opcodes.ICONST_0, 0))
+                collectedInstructions.add(IntConst(0))
             }
 
             ICONST_1 -> {
-                collectedInstructions.add(IntConst(ICONST_1, 1))
+                collectedInstructions.add(IntConst(1))
             }
 
             ICONST_2 -> {
-                collectedInstructions.add(IntConst(ICONST_2, 2))
+                collectedInstructions.add(IntConst(2))
             }
 
             ICONST_3 -> {
-                collectedInstructions.add(IntConst(ICONST_3, 3))
+                collectedInstructions.add(IntConst(3))
             }
 
             ICONST_4 -> {
-                collectedInstructions.add(IntConst(ICONST_4, 4))
+                collectedInstructions.add(IntConst(4))
             }
 
             ICONST_5 -> {
-                collectedInstructions.add(IntConst(ICONST_5, 5))
+                collectedInstructions.add(IntConst(5))
             }
 
             DCONST_0 -> {
-                collectedInstructions.add(DoubleConst(DCONST_0, 0.0))
+                collectedInstructions.add(DoubleConst(0.0))
             }
 
             DCONST_1 -> {
-                collectedInstructions.add(DoubleConst(DCONST_1, 1.0))
+                collectedInstructions.add(DoubleConst(1.0))
             }
 
             LCONST_0 -> {
-                collectedInstructions.add(LongConst(LCONST_0, 0))
+                collectedInstructions.add(LongConst(0))
             }
 
             LCONST_1 -> {
-                collectedInstructions.add(LongConst(LCONST_1, 0))
+                collectedInstructions.add(LongConst(0))
             }
 
             FCONST_0 -> {
-                collectedInstructions.add(FloatConst(FCONST_0, 0f))
+                collectedInstructions.add(FloatConst(0f))
             }
 
             FCONST_1 -> {
-                collectedInstructions.add(FloatConst(FCONST_1, 1f))
+                collectedInstructions.add(FloatConst(1f))
             }
 
             FCONST_2 -> {
-                collectedInstructions.add(FloatConst(FCONST_2, 2f))
+                collectedInstructions.add(FloatConst(2f))
             }
 
         // binary opcodes
             IADD, FADD,
             LADD, DADD -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.ADD, primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(BinaryOperation(OperatorType.ADD, primitiveTypeFromOpcode(opcode)))
             }
             ISUB, FSUB,
             LSUB, DSUB -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.SUBTRACT, primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(BinaryOperation(OperatorType.SUBTRACT, primitiveTypeFromOpcode(opcode)))
             }
 
             IMUL, FMUL,
             LMUL, DMUL -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.MULTIPLY, primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(BinaryOperation(OperatorType.MULTIPLY, primitiveTypeFromOpcode(opcode)))
             }
 
             IDIV, FDIV,
             LDIV, DDIV -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.DIVIDE, primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(BinaryOperation(OperatorType.DIVIDE, primitiveTypeFromOpcode(opcode)))
             }
 
             IREM, LREM,
             FREM, DREM -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.REMAINDER, primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(BinaryOperation(OperatorType.REMAINDER, primitiveTypeFromOpcode(opcode)))
             }
 
             LCMP, FCMPL, FCMPG,
             DCMPL, DCMPG -> {
-                collectedInstructions.add(CompareOperation(opcode, comparatorTypeFromOpcode(opcode), primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(CompareOperation(comparatorTypeFromOpcode(opcode), primitiveTypeFromOpcode(opcode)))
             }
 
         }
@@ -114,11 +114,11 @@ class MethodInsnCollector(access: Int, name: String?,
     override fun visitVarInsn(opcode: Int, localIdx: Int) {
         when (opcode) {
             ILOAD -> {
-                collectedInstructions.add(LocalLoad(opcode, localIdx, primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(LocalLoad(localIdx, primitiveTypeFromOpcode(opcode)))
             }
 
             ISTORE -> {
-                collectedInstructions.add(LocalStore(opcode, localIdx, primitiveTypeFromOpcode(opcode)))
+                collectedInstructions.add(LocalStore(localIdx, primitiveTypeFromOpcode(opcode)))
             }
 
         }
@@ -128,7 +128,7 @@ class MethodInsnCollector(access: Int, name: String?,
     override fun visitIntInsn(opcode: Int, operand: Int) {
         when (opcode) {
             BIPUSH, SIPUSH -> {
-                collectedInstructions.add(IntConst(opcode, operand))
+                collectedInstructions.add(IntConst(operand))
             }
         }
 
@@ -139,20 +139,23 @@ class MethodInsnCollector(access: Int, name: String?,
         when (opcode) {
             IF_ICMPEQ, IF_ICMPGE, IF_ICMPGT,
             IF_ICMPLE, IF_ICMPLT, IF_ICMPNE -> {
-                collectedInstructions.add(IntCompareJump(opcode, comparatorTypeFromOpcode(opcode), label))
+                collectedInstructions.add(IntCompareJump(comparatorTypeFromOpcode(opcode), label))
             }
 
             IFNONNULL -> {
-                collectedInstructions.add(NullCompareJump(opcode, ComparatorType.NOT_EQUAL, label))
+                collectedInstructions.add(NullCompareJump(ComparatorType.NOT_EQUAL, label))
             }
 
             IFNULL -> {
-                collectedInstructions.add(NullCompareJump(opcode, ComparatorType.EQUAL, label))
+                collectedInstructions.add(NullCompareJump(ComparatorType.EQUAL, label))
             }
 
             IFEQ, IFGE, IFGT,
             IFLE, IFLT, IFNE -> {
-                collectedInstructions.add(ZeroCompareJump(opcode, comparatorTypeFromOpcode(opcode), label))
+                collectedInstructions.add(ZeroCompareJump(comparatorTypeFromOpcode(opcode), label))
+            }
+            GOTO -> {
+                collectedInstructions.add(Goto(label))
             }
 
         }

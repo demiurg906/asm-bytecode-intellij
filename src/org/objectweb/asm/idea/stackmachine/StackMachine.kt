@@ -1,6 +1,6 @@
 package org.objectweb.asm.idea.stackmachine
 
-import org.objectweb.asm.idea.insns.Insn
+import org.objectweb.asm.idea.insns.Instruction
 
 //sealed class StackElement
 data class StackElement(val value: Int)
@@ -22,7 +22,7 @@ interface StackMachine {
 
     val stack: List<StackElement>
     val localVariables: LocalVariableTable
-    fun execute(insn: Insn): StackOperationResult
+    fun execute(insn: Instruction): StackOperationResult
 
     /**
      * Resets all variables in stack's local variable table and clears stack.
