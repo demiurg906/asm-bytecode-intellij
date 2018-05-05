@@ -46,8 +46,6 @@ import org.objectweb.asm.idea.visitors.MethodPsiInfo
 import reloc.org.objectweb.asm.ClassReader
 import reloc.org.objectweb.asm.Label
 import java.io.IOException
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.util.concurrent.Semaphore
 
 
@@ -81,7 +79,8 @@ class ShowBytecodeOutlineAction : AnAction() {
 
         val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
         val offset = editor.caretModel.offset
-        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+                ?: return
 
         val methodPsiInfo = findMethodPsiInfo(psiFile, offset)
 
@@ -91,12 +90,12 @@ class ShowBytecodeOutlineAction : AnAction() {
             val compilerManager = CompilerManager.getInstance(project)
             val files = arrayOf(virtualFile)
             if ("class" == virtualFile.extension) {
-                updateToolWindowContents(project, virtualFile)
+                updateToolWindowContents(project, virtualFile, methodPsiInfo)
             } else if (!virtualFile.isInLocalFileSystem && !virtualFile.isWritable) {
                 // probably a source file in a library
                 val psiClasses = psiFile.classes
                 if (psiClasses.size > 0) {
-                    updateToolWindowContents(project, psiClasses[0].originalElement.containingFile.virtualFile)
+                    updateToolWindowContents(project, psiClasses[0].originalElement.containingFile.virtualFile, methodPsiInfo)
                 }
             } else {
                 val application = ApplicationManager.getApplication()
@@ -136,7 +135,7 @@ class ShowBytecodeOutlineAction : AnAction() {
                         }
 
                     }
-                    application.invokeLater { updateToolWindowContents(project, result[0]) }
+                    application.invokeLater { updateToolWindowContents(project, result[0], methodPsiInfo) }
                 }
             }
         }
@@ -222,7 +221,7 @@ class ShowBytecodeOutlineAction : AnAction() {
      * @param project the project instance
      * @param file    the class file
      */
-    private fun updateToolWindowContents(project: Project, file: VirtualFile?) {
+    private fun updateToolWindowContents(project: Project, file: VirtualFile?, methodPsiInfo: MethodPsiInfo) {
         ApplicationManager.getApplication().runWriteAction(Runnable {
             if (file == null) {
                 BytecodeOutline.getInstance(project).setCode(file, Constants.NO_CLASS_FOUND)
@@ -230,7 +229,8 @@ class ShowBytecodeOutlineAction : AnAction() {
                 return@Runnable
             }
 
-            val (plainText, collectedInsns, lineNumbers, labelToLineMap, localVariables) = getMethodsInfo(file, project)
+            val (plainText, collectedInsns, lineNumbers,
+                    labelToLineMap, localVariables) = getMethodsInfo(file, project, methodPsiInfo)
             val lineToCommandMap = (lineNumbers zip collectedInsns).toMap().toSortedMap()
 
             val service = StackMachineService.getInstance(project)
@@ -250,6 +250,7 @@ class ShowBytecodeOutlineAction : AnAction() {
      * [plainText] is a bytecode;
      * [instructions] are instructions of method;
      * [lineNumbers] are indexes corresponding to lines of every instruction;
+     * [labelToLineNumberMap] is a map of correspondence of labels and indexes;
      * [localVariables] are list of variables visible from or initialized in method.
      */
     data class MethodInfo(val plainText: String,
@@ -258,11 +259,10 @@ class ShowBytecodeOutlineAction : AnAction() {
                           val labelToLineNumberMap: Map<Label, Int>,
                           val localVariables: List<LocalVariable>)
 
-    private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {
-        var reader: ClassReader?
-        try {
+    private fun getMethodsInfo(file: VirtualFile, project: Project, methodPsiInfo: MethodPsiInfo): MethodInfo {
+        val reader: ClassReader = try {
             file.refresh(false, false)
-            reader = ClassReader(file.contentsToByteArray())
+            ClassReader(file.contentsToByteArray())
         } catch (e: IOException) {
             TODO("normal exception")
         }
@@ -280,9 +280,16 @@ class ShowBytecodeOutlineAction : AnAction() {
         val visitor = ClassInsnCollector()
         reader.accept(visitor, flags)
 
+        return findAndCollectMethodInfo(visitor, methodPsiInfo)
+    }
+
+    private fun findAndCollectMethodInfo(visitor: ClassInsnCollector, methodPsiInfo: MethodPsiInfo): MethodInfo {
         // internal visitor and printer
-        val methodVisitor = visitor.methodVisitors[0]
-        val methodPrinter = visitor.printers[0]
+        val methodDescriptor = methodPsiInfo.descriptor
+        val methodIdx = visitor.methodVisitors
+                .indexOfFirst { it.desc == methodDescriptor && it.name == methodPsiInfo.functionName }
+        val methodVisitor = visitor.methodVisitors[methodIdx]
+        val methodPrinter = visitor.printers[methodIdx]
 
         // indexes corresponding to lines of every instruction
         val lineNumbers = methodPrinter.lineNumbers
