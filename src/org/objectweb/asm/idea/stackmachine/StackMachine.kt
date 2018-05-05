@@ -17,7 +17,7 @@ data class StackOperationResult(val removed: Int, val addedCells: List<StackElem
 
 interface StackMachine {
     companion object {
-        fun getInstance(localVariables: LocalVariableTable = LocalVariableTable(emptyList())) = StackMachineImpl(localVariables)
+        fun getInstance(localVariables: LocalVariableTable = LocalVariableTable.emptyTable) = StackMachineImpl(localVariables)
     }
 
     val stack: List<StackElement>

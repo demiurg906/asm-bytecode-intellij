@@ -2,12 +2,8 @@ package org.objectweb.asm.idea.stackmachine
 
 import org.objectweb.asm.idea.insns.*
 
-class StackMachineImpl(_localVariables: LocalVariableTable) : StackMachine {
+class StackMachineImpl(override val localVariables: LocalVariableTable) : StackMachine {
     private val _stack = mutableListOf<StackElement>()
-    private val _variables = _localVariables.variables.map { it.index to it }.toMap().toMutableMap()
-
-    override val localVariables: LocalVariableTable
-        get() = LocalVariableTable(_variables.values)
 
     override val stack: List<StackElement>
         get() = _stack.toList()
@@ -47,13 +43,13 @@ class StackMachineImpl(_localVariables: LocalVariableTable) : StackMachine {
     private fun storeVariable(index: Int): StackOperationResult {
         val value = _stack.pop()?.value
                 ?: throw IllegalArgumentException("No elements on stack to store in variable $index.")
-        _variables[index] = LocalVariable(index, "var_$index", value)
+        localVariables.setVariableById(index, value)
 
         return StackOperationResult(removed = 1, addedCells = emptyList())
     }
 
     private fun pushVariable(index: Int): StackOperationResult {
-        val variable = _variables[index]
+        val variable = localVariables.findVariableById(index)
                 ?: throw IllegalArgumentException("No name for variable with index $index is found!")
 
         return pushInt(variable.value)

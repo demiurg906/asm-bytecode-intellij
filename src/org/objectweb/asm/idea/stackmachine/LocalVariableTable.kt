@@ -23,4 +23,8 @@ class LocalVariableTable(val variables: Collection<LocalVariable>) {
         variable.value = value
     }
 
+    companion object {
+        val emptyTable = LocalVariableTable(emptyList())
+    }
+
 }
