@@ -1,11 +1,11 @@
 package org.objectweb.asm.idea.visitors
 
 import org.objectweb.asm.idea.insns.*
-import reloc.org.objectweb.asm.Label
 import org.objectweb.asm.idea.stackmachine.LocalVariable
-import reloc.org.objectweb.asm.tree.LocalVariableNode
+import reloc.org.objectweb.asm.Label
 import reloc.org.objectweb.asm.Opcodes
 import reloc.org.objectweb.asm.Opcodes.*
+import reloc.org.objectweb.asm.tree.LocalVariableNode
 import reloc.org.objectweb.asm.tree.MethodNode
 
 class MethodInsnCollector(access: Int, name: String?,
@@ -194,5 +194,13 @@ class MethodInsnCollector(access: Int, name: String?,
             else -> throw IllegalArgumentException("invalid opcode")
         }
 
+    }
+
+    override fun visitLdcInsn(operand: Any?) {
+        when (operand) {
+            is Double -> collectedInstructions.add(DoubleConst(DCONST_0, operand))
+            is Float -> collectedInstructions.add(FloatConst(FCONST_0, operand))
+            is Long -> collectedInstructions.add(LongConst(LCONST_0, operand))
+        }
     }
 }

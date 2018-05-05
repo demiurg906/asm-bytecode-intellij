@@ -41,6 +41,8 @@ class MethodTextifier : Textifier(ASM5) {
         }
     }
 
+
+
     override fun visitIntInsn(opcode: Int, operand: Int) {
         super.visitIntInsn(opcode, operand)
 
@@ -48,6 +50,13 @@ class MethodTextifier : Textifier(ASM5) {
             BIPUSH -> {
                 lineNumbers.add(super.text.size - 1)
             }
+        }
+    }
+
+    override fun visitLdcInsn(operand: Any?) {
+        super.visitLdcInsn(operand)
+        when (operand) {
+            is Double, is Float, is Long -> lineNumbers.add(super.text.size - 1)
         }
     }
 
