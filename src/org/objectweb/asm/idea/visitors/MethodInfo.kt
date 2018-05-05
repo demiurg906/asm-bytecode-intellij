@@ -18,6 +18,7 @@ class MethodPsiInfo(
     private fun convertToDescriptor(s: String): String {
         return when (s.toLowerCase()) {
             "byte" -> "B"
+            "void" -> "V"
             "char" -> "C"
             "double" -> "D"
             "float" -> "F"
