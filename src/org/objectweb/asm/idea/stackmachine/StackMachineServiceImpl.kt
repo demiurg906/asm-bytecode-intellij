@@ -20,14 +20,15 @@ class StackMachineServiceImpl : StackMachineService {
 
     private var lastExecutedLine: Int = 0
 
-    override fun initializeClass(map: CommandsMap) {
-        commandsMap = map
-        resetStack()
+    override fun initializeClass(params: StackParams) {
+        stackMachine = StackMachine.getInstance(params.localVariables)
+        commandsMap = params.commandsMap
+        stackViewer.stackMachine = stackMachine
+        visualizeStack()
     }
 
     override fun resetStack() {
-        stackMachine = StackMachine.getInstance()
-        stackViewer.stackMachine = stackMachine
+        stackMachine.resetState()
         lastExecutedLine = 0
         visualizeStack()
     }

@@ -83,7 +83,7 @@ class StackViewer {
     }
 
     private fun updateVariablesList() {
-        val variables = stackMachine.variables.values.map { "${it.name}: ${it.value}" }
+        val variables = stackMachine.localVariables.variables.map { "${it.name}: ${it.value}" }
         variablesList.setListData(variables.toTypedArray())
     }
 

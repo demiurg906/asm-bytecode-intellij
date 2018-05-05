@@ -1,10 +1,23 @@
 package org.objectweb.asm.idea.visitors
 
+import reloc.org.objectweb.asm.Label
 import reloc.org.objectweb.asm.Opcodes.*
 import reloc.org.objectweb.asm.util.Textifier
+import java.io.PrintWriter
+import java.io.StringWriter
 
 class MethodTextifier : Textifier(ASM5) {
     val lineNumbers: MutableList<Int> = mutableListOf()
+    val labelToLineNumber: MutableMap<Label, Int> = mutableMapOf()
+
+    val collectedText
+        get(): String {
+            val stringWriter = StringWriter()
+
+            PrintWriter(stringWriter).use { print(it) }
+
+            return stringWriter.toString()
+        }
 
     override fun visitInsn(opcode: Int) {
         super.visitInsn(opcode)
@@ -36,5 +49,10 @@ class MethodTextifier : Textifier(ASM5) {
                 lineNumbers.add(super.text.size - 1)
             }
         }
+    }
+
+    override fun visitLabel(label: Label) {
+        super.visitLabel(label)
+        labelToLineNumber[label] = super.text.size
     }
 }

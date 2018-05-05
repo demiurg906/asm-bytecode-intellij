@@ -8,6 +8,11 @@ import org.objectweb.asm.idea.ui.StackViewer
 
 typealias CommandsMap = Map<Int, Insn>
 
+/**
+ * Parameters to initialize stack state.
+ */
+data class StackParams(val commandsMap: CommandsMap, val localVariables: LocalVariableTable)
+
 interface StackMachineService {
     companion object {
         fun getInstance(project: Project): StackMachineService = ServiceManager.getService(project, StackMachineService::class.java)
@@ -15,7 +20,7 @@ interface StackMachineService {
 
     val stackViewer: StackViewer
 
-    fun initializeClass(map: CommandsMap)
+    fun initializeClass(params: StackParams)
     fun resetStack()
 
     fun emulateToCursor()

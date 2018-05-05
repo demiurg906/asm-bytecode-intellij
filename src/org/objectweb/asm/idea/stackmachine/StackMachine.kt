@@ -15,14 +15,17 @@ data class StackElement(val value: Int)
  */
 data class StackOperationResult(val removed: Int, val addedCells: List<StackElement>)
 
-data class LocalVariable(val name: String, var value: Int)
-
 interface StackMachine {
     companion object {
-        fun getInstance(): StackMachine = StackMachineImpl()
+        fun getInstance(localVariables: LocalVariableTable = LocalVariableTable.emptyTable) = StackMachineImpl(localVariables)
     }
 
     val stack: List<StackElement>
-    val variables: Map<Int, LocalVariable>
+    val localVariables: LocalVariableTable
     fun execute(insn: Insn): StackOperationResult
+
+    /**
+     * Resets all variables in stack's local variable table and clears stack.
+     */
+    fun resetState()
 }
