@@ -1,6 +1,7 @@
 package org.objectweb.asm.idea.visitors
 
 import org.objectweb.asm.idea.insns.*
+import reloc.org.objectweb.asm.Label
 import reloc.org.objectweb.asm.Opcodes
 import reloc.org.objectweb.asm.Opcodes.*
 import reloc.org.objectweb.asm.tree.MethodNode
@@ -10,6 +11,7 @@ class MethodInsnCollector(access: Int, name: String?,
                           exceptions: Array<out String>?) : MethodNode(ASM5, access, name, desc, signature, exceptions) {
 
     val collectedInstructions: MutableList<Insn> = mutableListOf()
+
 
     override fun visitInsn(opcode: Int) {
         when (opcode) {
@@ -73,42 +75,49 @@ class MethodInsnCollector(access: Int, name: String?,
         // binary opcodes
             IADD, FADD,
             LADD, DADD -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.ADD, getType(opcode)))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.ADD, primitiveTypeFromOpcode(opcode)))
             }
             ISUB, FSUB,
             LSUB, DSUB -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.SUBTRACT, getType(opcode)))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.SUBTRACT, primitiveTypeFromOpcode(opcode)))
             }
 
             IMUL, FMUL,
             LMUL, DMUL -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.MULTIPLY, getType(opcode)))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.MULTIPLY, primitiveTypeFromOpcode(opcode)))
             }
 
             IDIV, FDIV,
             LDIV, DDIV -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.DIVIDE, getType(opcode)))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.DIVIDE, primitiveTypeFromOpcode(opcode)))
             }
 
             IREM, LREM,
             FREM, DREM -> {
-                collectedInstructions.add(BinaryOperation(opcode, OperatorType.REMAINDER, getType(opcode)))
+                collectedInstructions.add(BinaryOperation(opcode, OperatorType.REMAINDER, primitiveTypeFromOpcode(opcode)))
+            }
+
+            LCMP, FCMPL, FCMPG,
+            DCMPL, DCMPG -> {
+                collectedInstructions.add(CompareOperation(opcode, comparatorTypeFromOpcode(opcode), primitiveTypeFromOpcode(opcode)))
             }
 
         }
+        super.visitInsn(opcode)
     }
 
     override fun visitVarInsn(opcode: Int, localIdx: Int) {
         when (opcode) {
             ILOAD -> {
-                collectedInstructions.add(LocalLoad(opcode, localIdx, getType(opcode)))
+                collectedInstructions.add(LocalLoad(opcode, localIdx, primitiveTypeFromOpcode(opcode)))
             }
 
             ISTORE -> {
-                collectedInstructions.add(LocalStore(opcode, localIdx, getType(opcode)))
+                collectedInstructions.add(LocalStore(opcode, localIdx, primitiveTypeFromOpcode(opcode)))
             }
 
         }
+        super.visitVarInsn(opcode, localIdx)
     }
 
     override fun visitIntInsn(opcode: Int, operand: Int) {
@@ -117,10 +126,36 @@ class MethodInsnCollector(access: Int, name: String?,
                 collectedInstructions.add(IntConst(opcode, operand))
             }
         }
+
+        super.visitIntInsn(opcode, operand)
     }
 
+    override fun visitJumpInsn(opcode: Int, label: Label) {
+        when (opcode) {
+            IF_ICMPEQ, IF_ICMPGE, IF_ICMPGT,
+            IF_ICMPLE, IF_ICMPLT, IF_ICMPNE -> {
+                collectedInstructions.add(IntCompareJump(opcode, comparatorTypeFromOpcode(opcode), label))
+            }
 
-    private fun getType(opcode: Int): PrimitiveType {
+            IFNONNULL -> {
+                collectedInstructions.add(NullCompareJump(opcode, ComparatorType.NOT_EQUAL, label))
+            }
+
+            IFNULL -> {
+                collectedInstructions.add(NullCompareJump(opcode, ComparatorType.EQUAL, label))
+            }
+
+            IFEQ, IFGE, IFGT,
+            IFLE, IFLT, IFNE -> {
+                collectedInstructions.add(ZeroCompareJump(opcode, comparatorTypeFromOpcode(opcode), label))
+            }
+
+        }
+
+        super.visitJumpInsn(opcode, label)
+    }
+
+    private fun primitiveTypeFromOpcode(opcode: Int): PrimitiveType {
         return when (opcode) {
             IADD, ISUB, IMUL,
             IDIV, IREM, ILOAD,
@@ -137,6 +172,20 @@ class MethodInsnCollector(access: Int, name: String?,
             DADD, DSUB, DMUL,
             DDIV, DREM, DLOAD,
             DSTORE -> PrimitiveType.DOUBLE
+            else -> throw IllegalArgumentException("invalid opcode")
+        }
+
+    }
+
+    private fun comparatorTypeFromOpcode(opcode: Int): ComparatorType {
+        return when (opcode) {
+            IF_ICMPEQ, IFEQ -> ComparatorType.EQUAL
+            IF_ICMPGE, IFGE -> ComparatorType.GREATER_EQUAL
+            IF_ICMPGT, IFGT, FCMPG, DCMPG -> ComparatorType.GREATER
+            IF_ICMPLE, IFLE -> ComparatorType.LESS_EQUAL
+            IF_ICMPLT, IFLT, FCMPL,
+            LCMP, DCMPL -> ComparatorType.LESS
+            IF_ICMPNE, IFNE -> ComparatorType.NOT_EQUAL
             else -> throw IllegalArgumentException("invalid opcode")
         }
 

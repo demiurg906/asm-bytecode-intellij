@@ -41,6 +41,7 @@ import org.objectweb.asm.idea.stackmachine.StackMachineService
 import org.objectweb.asm.idea.visitors.ClassInsnCollector
 import org.objectweb.asm.idea.visitors.MethodPsiInfo
 import reloc.org.objectweb.asm.ClassReader
+import reloc.org.objectweb.asm.Label
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -226,7 +227,8 @@ class ShowBytecodeOutlineAction : AnAction() {
                 return@Runnable
             }
 
-            val (plainText, collectedInsns, lineNumbers) = getMethodsInfo(file, project)
+            val (plainText, collectedInsns,
+                    lineNumbers, labelToLineMap) = getMethodsInfo(file, project)
             val service = StackMachineService.getInstance(project)
             service.initializeClass((lineNumbers zip collectedInsns).toMap().toSortedMap())
 
@@ -239,7 +241,7 @@ class ShowBytecodeOutlineAction : AnAction() {
     }
 
     data class MethodInfo(val plainText: String, val instructions: List<Insn>,
-                          val lineNumbers: List<Int>)
+                          val lineNumbers: List<Int>, val labelToLineNumberMap: Map<Label, Int>)
 
     private fun getMethodsInfo(file: VirtualFile, project: Project): MethodInfo {
         var reader: ClassReader?
@@ -274,11 +276,12 @@ class ShowBytecodeOutlineAction : AnAction() {
 
         // indexes corresponding to lines of every instruction
         val lineNumbers = methodPrinter.lineNumbers
+        val labelToLineMap = methodPrinter.labelToLineNumber
 
         // instructions of method
         val collectedInstructions = methodVisitor.collectedInstructions
 
-        return MethodInfo(stringWriter.toString(), collectedInstructions, lineNumbers)
+        return MethodInfo(stringWriter.toString(), collectedInstructions, lineNumbers, labelToLineMap)
     }
 
 
