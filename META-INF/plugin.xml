@@ -66,14 +66,15 @@
 		</action>
 	</actions>
 
+
 	<extensions defaultExtensionNs="com.intellij">
 		<toolWindow id="ASM" anchor="right" icon="/images/asm.gif"
 					factoryClass="org.objectweb.asm.idea.BytecodeOutlineToolWindowFactory"/>
 		<projectService serviceInterface="org.objectweb.asm.idea.BytecodeOutline"
 						serviceImplementation="org.objectweb.asm.idea.BytecodeOutline"/>
-		<projectService serviceInterface="org.objectweb.asm.idea.BytecodeASMified"
-						serviceImplementation="org.objectweb.asm.idea.BytecodeASMified"/>
-        <projectService serviceInterface="org.objectweb.asm.idea.GroovifiedView"
-                        serviceImplementation="org.objectweb.asm.idea.GroovifiedView"/>
+		<projectService serviceInterface="org.objectweb.asm.idea.stackmachine.StackMachineService"
+						serviceImplementation="org.objectweb.asm.idea.stackmachine.StackMachineServiceImpl"/>
+		<projectService serviceInterface="org.objectweb.asm.idea.ui.ASMPopupService"
+						serviceImplementation="org.objectweb.asm.idea.ui.ASMPopupServiceImpl"/>
 	</extensions>
 </idea-plugin>
