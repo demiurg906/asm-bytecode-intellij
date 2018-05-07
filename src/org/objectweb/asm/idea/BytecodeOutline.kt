@@ -32,6 +32,9 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.editor.event.CaretEvent
+import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -78,6 +81,13 @@ class BytecodeOutline @JvmOverloads constructor(
     private fun setupUI() {
         val mainPanel = JPanel()
         mainPanel.layout = GridLayout(2, 1)
+
+        editor.settings.isAnimatedScrolling = true
+        editor.caretModel.addCaretListener(object : CaretListener {
+            override fun caretPositionChanged(e: CaretEvent) {
+                e.editor.scrollingModel.scrollToCaret(ScrollType.RELATIVE)
+            }
+        })
 
         val editorComponent = editor.component
         mainPanel.add(editorComponent)
