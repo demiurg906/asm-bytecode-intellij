@@ -1,1 +1,9 @@
-This file was created by IntelliJ IDEA 10.0.1 for binding GitHub repository
+# ASM bytecode visualizer
+
+Intellij IDEA plugin for visualizing java-bytecode stack operations.
+
+### Authors:
+
+* Aleksey Zubakov (@aleksZubakov)
+* Roman Golyshev (@fedochet)
+* Dmitriy Novozhilov (@demiurg906)
