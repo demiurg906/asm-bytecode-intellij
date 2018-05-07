@@ -34,10 +34,14 @@ class StackMachineServiceImpl : StackMachineService {
     }
 
     override fun emulateToCursor() {
-        for (line in lastExecutedLine until currentLine) {
-            commandsMap[line]?.executeOnStack()
+        while (lastExecutedLine != currentLine) {
+            val nextLine = commandsMap[lastExecutedLine]?.executeOnStack()?.nextLine
+            if (nextLine == null) {
+                lastExecutedLine += 1
+            } else {
+                lastExecutedLine = nextLine
+            }
         }
-        lastExecutedLine = currentLine
         visualizeStack()
     }
 
